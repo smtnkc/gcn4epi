@@ -2,9 +2,7 @@
 
 1. Download Human Genome **GRCh37** from [Human Genome Resources at NCBI](https://www.ncbi.nlm.nih.gov/projects/genome/guide/human/index.shtml) and place it under this directory. **Example:** `data/GRCh37_latest_genomic.fna`
 
-2. Download `pairs.csv` file for desired cell line from [TargetFinder Repo](https://github.com/shwhalen/targetfinder/tree/master/paper/targetfinder). Rename it as `ep_pairs.csv`. Place it under a subdirectory with the same name as its cell line. **Example:** `data/GM12878/ep_pairs.csv`
-
-3. Run `fetch_and_parse` and `prepare_gcn_data` modules respectively to prepare data files required by GCN.
+2. Run `fetch_and_parse` and `prepare_gcn_data` modules respectively to prepare data files required by GCN.
 
 ![S1](./s1.png)
 
