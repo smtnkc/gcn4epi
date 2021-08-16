@@ -1,0 +1,6 @@
+Cell line     = GM12878
+Train epochs  = 29
+Random seed   = 42
+Test cost     = 0.64221
+Test accuracy = 0.75468
+Test duration = 0.07101
