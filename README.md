@@ -3,13 +3,23 @@ Graph Convolutional Networks for Prediction of Enhancer-Promoter Interactions
 
 ## Running Instructions
 
-Run `gcn/fetch_and_parse.py`, `gcn/prepare_gcn_data.py`, and `gcn/train.py`, respectively.
+1. Create virtual environment with required packages.
+
+```bash
+python -m venv ~/env/gcn_env
+source ~/env/gcn_env/bin/activate
+pip install --upgrade pip
+pip install -r requirements.txt
+python setup.py install
+```
+
+2. Run `gcn/fetch_and_parse.py`, `gcn/prepare_gcn_data.py`, and `gcn/train.py`, respectively.
 
 **Example:**
 ```bash
 cd gcn
-python fetch_and_parse.py --cell_line='GM12878' --kmer=5 --seed=42
-python prepare_gcn_data.py --cell_line='GM12878' --kmer=5 --seed=42 --label_rate=0.2
+python fetch_and_parse.py --cell_line='GM12878' --k_mer=5
+python prepare_gcn_data.py --cell_line='GM12878' --k_mer=5 --seed=42 --label_rate=0.2
 python train.py --cell_line='GM12878' --seed=42
 ```
 

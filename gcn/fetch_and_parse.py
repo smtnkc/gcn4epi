@@ -47,7 +47,7 @@ def getSequences(ep_pairs):
     # https://github.com/shwhalen/targetfinder/tree/master/paper/targetfinder
 
     print('Parsing GRCh37 genome...')
-    hg37 = SeqIO.to_dict(SeqIO.parse('GRCh37_latest_genomic.fna', 'fasta'))
+    hg37 = SeqIO.to_dict(SeqIO.parse('data/GRCh37_latest_genomic.fna', 'fasta'))
 
     RefSeqIDs = []
 
