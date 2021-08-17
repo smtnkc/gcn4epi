@@ -1,6 +1,0 @@
-Cell line     = K562
-Train epochs  = 34
-Random seed   = 42
-Test cost     = 0.64771
-Test accuracy = 0.74207
-Test duration = 0.05448

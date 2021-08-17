@@ -12,18 +12,18 @@ def sample_mask(idx, l):
     return np.array(mask, dtype=np.bool)
 
 
-def load_data(cell_line):
+def load_data(cell_line, label_rate, k_mer):
     """
-    Load input data from data/cell_line directory
+    Load input data from data/cell_line directory.
 
-    | data/cell_line/x.index  | the indices of labeled train instances as list object |
-    | data/cell_line/ux.index | the indices of unlabeled train instances as list object |
-    | data/cell_line/vx.index | the indices of validation instances as list object |
-    | data/cell_line/tx.index | the indices of test instances as list object |
-    | data/cell_line/labels   | the one-hot labels of **all** instances as numpy.ndarray object |
-    | data/cell_line/features | the feature vectors of **all** instances as scipy.sparse.csr.csr_matrix object |
-    | data/cell_line/nodes    | a dict in the format **{id: chromosome_name}** as collections.defaultdict object |
-    | data/cell_line/graph    | a dict in the format **{id: [id_of_neighbor_nodes]}** as collections.defaultdict object |
+    | x_020.index   | the indices (IDs) of labeled train instances as list object (for label_rate = 0.2) |
+    | ux_020.index  | the indices (IDs) of unlabeled train instances as list object (for label_rate = 0.2) |
+    | vx_020.index  | the indices (IDs) of validation instances as list object (for label_rate = 0.2) |
+    | tx_020.index  | the indices (IDs) of test instances as list object (for label_rate = 0.2) |
+    | features_5mer | the feature vectors of all instances as scipy.sparse.csr.csr_matrix object (for k_mer = 5) |
+    | nodes         | a dict in the format {chromosome_name: ID} as collections.defaultdict object |
+    | labels        | the one-hot labels of all instances as numpy.ndarray object |
+    | graph         | a dict in the format {ID: [IDs_of_neighbor_nodes]} as collections.defaultdict object |
 
     All objects above must be saved using python pickle module.
 
@@ -31,7 +31,7 @@ def load_data(cell_line):
     :return: All data input files loaded (as well the training/test data).
     """
     # STEP 1: Load all feature vectors, class labels and graph
-    features_file = open('data/{}/features'.format(cell_line), "rb")
+    features_file = open('data/{}/features_{}mer'.format(cell_line, k_mer), "rb")
     features = pkl.load(features_file)
     features_file.close()
 
@@ -46,19 +46,21 @@ def load_data(cell_line):
     adj = nx.adjacency_matrix(nx.from_dict_of_lists(graph))
 
     # STEP 2: Load IDs of labeled_train/unlabeled_train/validation/test nodes
-    idx_x_file = open('data/{}/x.index'.format(cell_line), "rb")
+    lr = txt = '0' + '{:.2f}'.format(label_rate).split('.')[1]
+
+    idx_x_file = open('data/{}/x_{}.index'.format(cell_line, lr), "rb")
     idx_x = pkl.load(idx_x_file)
     idx_x_file.close()
 
-    idx_ux_file = open('data/{}/ux.index'.format(cell_line), "rb")
+    idx_ux_file = open('data/{}/ux_{}.index'.format(cell_line, lr), "rb")
     idx_ux = pkl.load(idx_ux_file)
     idx_ux_file.close()
 
-    idx_vx_file = open('data/{}/vx.index'.format(cell_line), "rb")
+    idx_vx_file = open('data/{}/vx_{}.index'.format(cell_line, lr), "rb")
     idx_vx = pkl.load(idx_vx_file)
     idx_vx_file.close()
 
-    idx_tx_file = open('data/{}/tx.index'.format(cell_line), "rb")
+    idx_tx_file = open('data/{}/tx_{}.index'.format(cell_line, lr), "rb")
     idx_tx = pkl.load(idx_tx_file)
     idx_tx_file.close()
 

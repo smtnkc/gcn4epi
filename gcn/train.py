@@ -6,8 +6,8 @@ import tensorflow as tf
 import logging
 import os
 
-from gcn.utils import *
-from gcn.models import GCN, MLP
+from utils import *
+from models import GCN, MLP
 
 # Settings
 flags = tf.app.flags
@@ -22,13 +22,17 @@ flags.DEFINE_float('weight_decay', 5e-4, 'Weight for L2 loss on embedding matrix
 flags.DEFINE_integer('early_stopping', 10, 'Tolerance for early stopping (# of epochs).')
 flags.DEFINE_integer('max_degree', 3, 'Maximum Chebyshev polynomial degree.')
 flags.DEFINE_integer('seed', 42, 'Random seed.')
+flags.DEFINE_integer('k_mer', 5, 'K-mer length.')
+flags.DEFINE_float('label_rate', 0.2, 'Label rate in [0.2, 0.1, 0.05].')
 
 # Set random seed
 np.random.seed(FLAGS.seed)
 tf.set_random_seed(FLAGS.seed)
 
 # Load data
-adj, features, y_train, y_val, y_test, train_mask, val_mask, test_mask = load_data(FLAGS.cell_line)
+adj, features, y_train, y_val, y_test, train_mask, val_mask, test_mask = load_data(
+    FLAGS.cell_line, FLAGS.label_rate, FLAGS.k_mer)
+n_nodes = features.shape[0]
 
 # Some preprocessing
 features = preprocess_features(features)
@@ -113,12 +117,22 @@ print("Test set results:", "cost=", "{:.5f}".format(test_cost),
 if not os.path.isdir("results"):
     os.makedirs("results")
 
-log_file = "results/{}_seed_{}.txt".format(FLAGS.cell_line, FLAGS.seed)
+lr = txt = '0' + '{:.2f}'.format(FLAGS.label_rate).split('.')[1]
+log_file = "results/{}_seed_{}_lr_{}.txt".format(FLAGS.cell_line, FLAGS.seed, lr)
 open(log_file, 'w').close() # clear file content
 logging.basicConfig(format='%(message)s', filename=log_file,level=logging.DEBUG)
-logging.info("Cell line     = {}".format(FLAGS.cell_line))
-logging.info("Train epochs  = {}".format(epoch))
-logging.info("Random seed   = {}".format(FLAGS.seed))
-logging.info("Test cost     = {:.5f}".format(test_cost))
-logging.info("Test accuracy = {:.5f}".format(test_acc))
-logging.info("Test duration = {:.5f}".format(test_duration))
+logging.info("Cell line                  = {}".format(FLAGS.cell_line))
+logging.info("Random seed                = {}".format(FLAGS.seed))
+logging.info("Label rate                 = {:.2f}".format(FLAGS.label_rate))
+logging.info("K-mer length               = {}".format(FLAGS.k_mer))
+logging.info("Total number of nodes      = {}".format(n_nodes))
+logging.info("Labeled train nodes (x)    = {}".format(sum(train_mask)))
+logging.info("Validation nodes (vx)      = {}".format(sum(val_mask)))
+logging.info("Test nodes (tx)            = {}".format(sum(test_mask)))
+logging.info("Unlabeled train nodes (ux) = {}".format(n_nodes - (sum(train_mask) + sum(val_mask) + sum(test_mask))))
+logging.info("Train epochs               = {}".format(epoch))
+logging.info("Train accuracy             = {:.5f}".format(outs[2]))
+logging.info("Validation accuracy        = {:.5f}".format(acc))
+logging.info("Test accuracy              = {:.5f}".format(test_acc))
+logging.info("Test cost                  = {:.5f}".format(test_cost))
+logging.info("Test duration              = {:.5f}".format(test_duration))
