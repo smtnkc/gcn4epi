@@ -31,10 +31,10 @@ python train.py --cell_line='GM12878' --k_mer=5 --seed=42 --label_rate=0.2
 
 | **File Name** | **Description** |
 | :--           | :--             |
-| x_020.index   | the indices (IDs) of labeled train instances as list object (for label_rate = 0.2) |
-| ux_020.index  | the indices (IDs) of unlabeled train instances as list object (for label_rate = 0.2) |
-| vx_020.index  | the indices (IDs) of validation instances as list object (for label_rate = 0.2) |
-| tx_020.index  | the indices (IDs) of test instances as list object (for label_rate = 0.2) |
+| x_20.index   | the indices (IDs) of labeled train instances as list object (for label_rate = 20%) |
+| ux_20.index  | the indices (IDs) of unlabeled train instances as list object (for label_rate = 20%) |
+| vx_20.index  | the indices (IDs) of validation instances as list object (for label_rate = 20%) |
+| tx_20.index  | the indices (IDs) of test instances as list object (for label_rate = 20%) |
 | features_5mer | the feature vectors of **all** instances as scipy.sparse.csr.csr_matrix object (for k_mer = 5) |
 | nodes         | a dict in the format **{chromosome_name: ID}** as collections.defaultdict object |
 | labels        | the one-hot labels of **all** instances as numpy.ndarray object |

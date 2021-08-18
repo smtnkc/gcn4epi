@@ -280,7 +280,7 @@ if __name__ == "__main__":
     idx_x, idx_ux, idx_vx, idx_tx = getIdPortions(id_dict, args)
     print('Writing index files for train/test/validation split...')
 
-    lr = txt = '0' + '{:.2f}'.format(args.label_rate).split('.')[1]
+    lr = txt = '{:.2f}'.format(args.label_rate).split('.')[1]
 
     idx_x_file = open('data/{}/x_{}.index'.format(args.cell_line, lr), "wb")
     pkl.dump(idx_x, idx_x_file)

@@ -16,10 +16,10 @@ def load_data(cell_line, label_rate, k_mer):
     """
     Load input data from data/cell_line directory.
 
-    | x_020.index   | the indices (IDs) of labeled train instances as list object (for label_rate = 0.2) |
-    | ux_020.index  | the indices (IDs) of unlabeled train instances as list object (for label_rate = 0.2) |
-    | vx_020.index  | the indices (IDs) of validation instances as list object (for label_rate = 0.2) |
-    | tx_020.index  | the indices (IDs) of test instances as list object (for label_rate = 0.2) |
+    | x_20.index   | the indices (IDs) of labeled train instances as list object (for label_rate = 20%) |
+    | ux_20.index  | the indices (IDs) of unlabeled train instances as list object (for label_rate = 20%) |
+    | vx_20.index  | the indices (IDs) of validation instances as list object (for label_rate = 20%) |
+    | tx_20.index  | the indices (IDs) of test instances as list object (for label_rate = 20%) |
     | features_5mer | the feature vectors of all instances as scipy.sparse.csr.csr_matrix object (for k_mer = 5) |
     | nodes         | a dict in the format {chromosome_name: ID} as collections.defaultdict object |
     | labels        | the one-hot labels of all instances as numpy.ndarray object |
@@ -46,7 +46,7 @@ def load_data(cell_line, label_rate, k_mer):
     adj = nx.adjacency_matrix(nx.from_dict_of_lists(graph))
 
     # STEP 2: Load IDs of labeled_train/unlabeled_train/validation/test nodes
-    lr = txt = '0' + '{:.2f}'.format(label_rate).split('.')[1]
+    lr = txt = '{:.2f}'.format(label_rate).split('.')[1]
 
     idx_x_file = open('data/{}/x_{}.index'.format(cell_line, lr), "rb")
     idx_x = pkl.load(idx_x_file)

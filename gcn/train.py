@@ -117,7 +117,7 @@ print("Test set results:", "cost=", "{:.5f}".format(test_cost),
 if not os.path.isdir("results"):
     os.makedirs("results")
 
-lr = txt = '0' + '{:.2f}'.format(FLAGS.label_rate).split('.')[1]
+lr = txt = '{:.2f}'.format(FLAGS.label_rate).split('.')[1]
 log_file = "results/{}_seed_{}_lr_{}.txt".format(FLAGS.cell_line, FLAGS.seed, lr)
 open(log_file, 'w').close() # clear file content
 logging.basicConfig(format='%(message)s', filename=log_file,level=logging.DEBUG)
