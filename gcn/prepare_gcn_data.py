@@ -31,11 +31,11 @@ def getPairs(cell_line):
         ep_pairs = pd.read_csv('https://raw.githubusercontent.com/shwhalen/' \
                                'targetfinder/master/paper/targetfinder/{}/' \
                                'output-ep/pairs.csv'.format(cell_line))
-        if not os.path.isdir('data/{}'.format(args.cell_line)):
-            print('Creating directory for {} cell line...'.format(args.cell_line))
-            os.makedirs('data/{}'.format(args.cell_line))
-        print('Writing pairs to data/{}/ep_pairs.csv'.format(args.cell_line))
-        ep_pairs.to_csv('data/{}/ep_pairs.csv'.format(args.cell_line), index=False)
+        if not os.path.isdir('data/{}'.format(cell_line)):
+            print('Creating directory for {} cell line...'.format(cell_line))
+            os.makedirs('data/{}'.format(cell_line))
+        print('Writing pairs to data/{}/ep_pairs.csv'.format(cell_line))
+        ep_pairs.to_csv('data/{}/ep_pairs.csv'.format(cell_line), index=False)
     return ep_pairs
 
 def getSequences(ep_pairs):
@@ -243,7 +243,7 @@ if __name__ == "__main__":
 
     print('{} EP pairs have been read.'.format(len(ep_pairs)))
 
-    ep_pairs = ep_pairs[ep_pairs['label'] == 1] # Keep only the interacting pairs
+    ep_pairs = ep_pairs[ep_pairs['label'] == 1].reset_index() # Keep only the interacting pairs
     print('{} EP pairs are labeled as 1.'.format(len(ep_pairs)))
 
     ep_sequences = getSequences(ep_pairs)
