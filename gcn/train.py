@@ -24,6 +24,7 @@ flags.DEFINE_integer('max_degree', 3, 'Maximum Chebyshev polynomial degree.')
 flags.DEFINE_integer('seed', 42, 'Random seed.')
 flags.DEFINE_integer('k_mer', 5, 'K-mer length.')
 flags.DEFINE_float('label_rate', 0.2, 'Label rate in [0.2, 0.1, 0.05].')
+flags.DEFINE_integer('frag_len', 0, 'Fragment length (base pairs): 0 (disabled) or 200.')
 
 # Set random seed
 np.random.seed(FLAGS.seed)
@@ -118,10 +119,11 @@ if not os.path.isdir("results"):
     os.makedirs("results")
 
 lr = txt = '{:.2f}'.format(FLAGS.label_rate).split('.')[1]
-log_file = "results/{}_seed_{}_lr_{}.txt".format(FLAGS.cell_line, FLAGS.seed, lr)
+log_file = "results/{}_seed_{}_lr_{}_frag_{}.txt".format(FLAGS.cell_line, FLAGS.seed, lr, FLAGS.frag_len)
 open(log_file, 'w').close() # clear file content
 logging.basicConfig(format='%(message)s', filename=log_file,level=logging.DEBUG)
 logging.info("Cell line                  = {}".format(FLAGS.cell_line))
+logging.info("Fragment length            = {}".format(FLAGS.frag_len))
 logging.info("Random seed                = {}".format(FLAGS.seed))
 logging.info("Label rate                 = {:.2f}".format(FLAGS.label_rate))
 logging.info("K-mer length               = {}".format(FLAGS.k_mer))
@@ -130,7 +132,7 @@ logging.info("Labeled train nodes (x)    = {}".format(sum(train_mask)))
 logging.info("Validation nodes (vx)      = {}".format(sum(val_mask)))
 logging.info("Test nodes (tx)            = {}".format(sum(test_mask)))
 logging.info("Unlabeled train nodes (ux) = {}".format(n_nodes - (sum(train_mask) + sum(val_mask) + sum(test_mask))))
-logging.info("Train epochs               = {}".format(epoch))
+logging.info("Train epochs               = {}".format(epoch+1))
 logging.info("Train accuracy             = {:.5f}".format(outs[2]))
 logging.info("Validation accuracy        = {:.5f}".format(acc))
 logging.info("Test accuracy              = {:.5f}".format(test_acc))

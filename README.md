@@ -1,24 +1,42 @@
 # gcn4epi
 Graph Convolutional Networks for Prediction of Enhancer-Promoter Interactions
 
-## Running Instructions
+## Environment Setup
 
-1. Create virtual environment with required packages.
+1. Create and activate a fresh virtual environment:
 
 ```bash
 python -m venv ~/env/gcn_env
 source ~/env/gcn_env/bin/activate
 pip install --upgrade pip
+```
+
+2. Install [pcdhit](https://github.com/simomarsili/pcdhit) and [cd-hit](https://github.com/weizhongli/cdhit) packages.
+
+```bash
+git clone https://github.com/simomarsili/pcdhit.git
+python pcdhit/setup.py install
+git clone https://github.com/weizhongli/cdhit.git
+cd cdhit
+make openmp=no
+realpath cd-hit /usr/local/bin | xargs sudo ln -s
+cd ..
+```
+
+3. Install all required packages:
+```bash
 pip install -r requirements.txt
 ```
 
-2. Run `prepare_gcn_data.py` and `train.py` modules, respectively.
+## Running Instructions
+
+Run `prepare_gcn_data.py` and `train.py` modules, respectively.
 
 **Example:**
 ```bash
 cd gcn
-python prepare_gcn_data.py --cell_line='GM12878' --k_mer=5 --seed=42 --label_rate=0.2
-python train.py --cell_line='GM12878' --k_mer=5 --seed=42 --label_rate=0.2
+python prepare_gcn_data.py --cell_line='GM12878' --k_mer=5 --seed=42 --label_rate=0.2 --frag_len=200
+python train.py --cell_line='GM12878' --k_mer=5 --seed=42 --label_rate=0.2 --frag_len=200
 ```
 
 ## Data Requirements

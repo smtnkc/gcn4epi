@@ -6,9 +6,12 @@ import pandas as pd
 import pickle as pkl
 import scipy.sparse as sp
 import argparse
+import pcdhit
 from Bio import SeqIO
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.model_selection import train_test_split
+from collections import Counter
+from progress.bar import Bar
 
 
 def getPairs(cell_line):
@@ -85,6 +88,85 @@ def getSequences(ep_pairs):
                                  'enhancer_seq': enhancer_sequences,
                                  'promoter_seq': promoter_sequences})
     return ep_sequences
+
+def getFragments(ep_sequences, frag_len):
+    enh_names = []
+    enh_frag_names = []
+    enh_frag_seqs = []
+    for i in range(len(ep_sequences)):
+        seq = ep_sequences['enhancer_seq'][i]
+        name = ep_sequences['enhancer_name'][i]
+        coordinates = name.split(':')[1]
+        coor_start = int(coordinates.split('-')[0])
+        coor_end = coor_start + frag_len
+        while len(seq) >= frag_len:
+            fragment = str(coor_start) + '-' + str(coor_end)
+            enh_names.append(name)
+            enh_frag_names.append(name.split(':')[0] + ':' + fragment)
+            enh_frag_seqs.append(seq[:frag_len])
+            seq = seq[frag_len:]
+            coor_start = coor_end
+            coor_end = coor_start + frag_len
+
+    pro_names = []
+    pro_frag_names = []
+    pro_frag_seqs = []
+    for i in range(len(ep_sequences)):
+        seq = ep_sequences['promoter_seq'][i]
+        name = ep_sequences['promoter_name'][i]
+        coordinates = name.split(':')[1]
+        coor_start = int(coordinates.split('-')[0])
+        coor_end = coor_start + frag_len
+        while len(seq) >= frag_len:
+            fragment = str(coor_start) + '-' + str(coor_end)
+            pro_names.append(name)
+            pro_frag_names.append(name.split(':')[0] + ':' + fragment)
+            pro_frag_seqs.append(seq[:frag_len])
+            seq = seq[frag_len:]
+            coor_start = coor_end
+            coor_end = coor_start + frag_len
+
+    df_enh_fragments = pd.DataFrame({'enhancer_name': enh_names, 'enhancer_frag_name': enh_frag_names, 'enhancer_frag_seq': enh_frag_seqs})
+    df_pro_fragments = pd.DataFrame({'promoter_name': pro_names, 'promoter_frag_name': pro_frag_names, 'promoter_frag_seq': pro_frag_seqs})
+
+    df_enh_fragments = df_enh_fragments.drop_duplicates(subset=['enhancer_frag_name']).reset_index(drop=True)
+    df_pro_fragments = df_pro_fragments.drop_duplicates(subset=['promoter_frag_name']).reset_index(drop=True)
+    return df_enh_fragments, df_pro_fragments
+
+def getFilteredFragments(df_frags, threshold):
+    filtered_frags = list(pcdhit.filter(list(zip(df_frags.iloc[:,1], df_frags.iloc[:,2])), threshold=threshold))
+    df_ff = df_frags[df_frags.iloc[:,2].isin([e[1] for e in filtered_frags])].reset_index(drop=True)
+    return df_ff
+
+def getMergedFragments(ep_sequences, df_fef, df_fpf):
+    col_names =  ['enhancer_name', 'enhancer_frag_name', 'enhancer_frag_seq',
+              'promoter_name', 'promoter_frag_name', 'promoter_frag_seq']
+
+    merged_df = pd.DataFrame(columns = col_names)
+
+    with Bar('Processing', max=len(ep_sequences)) as bar:
+        for i in range(len(ep_sequences)):
+            enh_frags = df_fef[df_fef['enhancer_name'] == ep_sequences['enhancer_name'][i]]
+            pro_frags = df_fpf[df_fpf['promoter_name'] == ep_sequences['promoter_name'][i]]
+
+            for e in range(len(enh_frags)):
+                for p in range(len(pro_frags)):
+                    e_row = enh_frags[e:e+1].reset_index(drop=True)
+                    p_row = pro_frags[p:p+1].reset_index(drop=True)
+                    merged_row = pd.concat([e_row, p_row], axis=1)
+                    merged_df = pd.concat([merged_df, merged_row])
+            bar.next()
+
+    return merged_df.reset_index(drop=True)
+
+def getBalancedDf(df):
+    # To balance the fragments, use 3189 most frequent promoters for GM12878 cell line
+    # 3189 is selected by several trials and probably will not work for the other cell lines
+    # TO-DO: Define threshold values for all cell lines
+
+    most_freq_promoters = [p[0] for p in Counter(df_temp['promoter_name']).most_common(3189)]
+    df_balanced = df_temp[df_temp['promoter_name'].isin(most_freq_promoters)].reset_index(drop=True)
+    return df_balanced
 
 def DNA2Sentence(dna, K, clean=False):
     if clean:
@@ -234,21 +316,78 @@ if __name__ == "__main__":
     parser.add_argument('--k_mer', default=5, type=int)
     parser.add_argument('--seed', default=42, type=int)
     parser.add_argument('--label_rate', default=0.2, type=float) # [0.2, 0.1, 0.05]
+    parser.add_argument('--frag_len', default=0, type=int) # set 200 to split into 200bp fragments
     args = parser.parse_args()
     random.seed(args.seed)
 
-    ep_pairs = getPairs(args.cell_line)
-    if (ep_pairs is None):
-        sys.exit()
+    if args.frag_len > 0:
+        # Use fix-sized fragments (not full sequences)
 
-    print('{} EP pairs have been read.'.format(len(ep_pairs)))
+        if os.path.isfile('data/{}/frag_pairs_balanced.csv'.format(args.cell_line)):
+            print('Reading existing fragments from local file...')
+            ep_sequences = pd.read_csv('data/{}/frag_pairs_balanced.csv'.format(args.cell_line))
+            print('{} enhancer fragments.'.format(len(set(ep_sequences['enhancer_name']))))
+            print('{} promoter fragments.'.format(len(set(ep_sequences['promoter_name']))))
+            print('{} interactions between EP fragments.'.format(len(ep_sequences)))
+        else:
+            print('Generating fragments from scratch...')
 
-    ep_pairs = ep_pairs[ep_pairs['label'] == 1].reset_index() # Keep only the interacting pairs
-    print('{} EP pairs are labeled as 1.'.format(len(ep_pairs)))
+            ep_pairs = getPairs(args.cell_line)
+            if (ep_pairs is None):
+                sys.exit()
 
-    ep_sequences = getSequences(ep_pairs)
-    ep_sequences.to_csv('data/{}/ep_sequences.csv'.format(args.cell_line), index=False)
-    print('EP sequences are written!')
+            print('{} EP pairs have been read.'.format(len(ep_pairs)))
+
+            ep_pairs = ep_pairs[ep_pairs['label'] == 1].reset_index() # Keep only the interacting pairs
+            print('{} EP pairs are labeled as 1.'.format(len(ep_pairs)))
+
+            ep_sequences = getSequences(ep_pairs)
+            ep_sequences.to_csv('data/{}/ep_sequences.csv'.format(args.cell_line), index=False)
+            print('EP sequences are written!')
+
+            print('Removing sequences shorter than {}bp...'.format(args.frag_len))
+            ep_sequences = ep_sequences[
+                ep_sequences['enhancer_seq'].apply(lambda x: len(x)>=args.frag_len) &
+                ep_sequences['promoter_seq'].apply(lambda x: len(x)>=args.frag_len)].reset_index(drop=True)
+
+            print('{} enhancers with length >= {}'.format(len(set(ep_sequences['enhancer_name'])), args.frag_len))
+            print('{} promoters with length >= {}'.format(len(set(ep_sequences['promoter_name'])), args.frag_len))
+            print('SPLITTING INTO FRAGMENTS...')
+            df_enh_frags, df_pro_frags = getFragments(ep_sequences, args.frag_len)
+            print('{} fragments from {} enhancers.'.format(len(df_enh_frags), len(set(df_enh_frags['enhancer_name']))))
+            print('{} fragments from {} promoters.'.format(len(df_pro_frags), len(set(df_pro_frags['promoter_name']))))
+            df_fef = getFilteredFragments(df_enh_frags, 0.8)
+            df_fpf = getFilteredFragments(df_pro_frags, 0.8)
+
+            df_merged_frags = getMergedFragments(ep_sequences, df_fef, df_fpf)
+            df_merged_frags.to_csv('data/{}/frag_pairs.csv'.format(args.cell_line), index=False)
+
+            # Reformat columns for getSentences function
+            df_temp = df_merged_frags[['enhancer_frag_name', 'enhancer_frag_seq', 'promoter_frag_name', 'promoter_frag_seq']]
+            df_temp.columns = ['enhancer_name', 'enhancer_seq', 'promoter_name', 'promoter_seq']
+
+            df_temp_balanced = getBalancedDf(df_temp)
+            print('{} enhancer fragments with low similarity.'.format(len(set(df_temp_balanced['enhancer_name']))))
+            print('{} promoter fragments with low similarity.'.format(len(set(df_temp_balanced['promoter_name']))))
+
+            df_temp_balanced.to_csv('data/{}/frag_pairs_balanced.csv'.format(args.cell_line), index=False)
+
+            ep_sequences = df_temp_balanced
+    else:
+        # Use full sequences (not fragments)
+        if os.path.isfile('data/{}/ep_sequences.csv'.format(args.cell_line)):
+            print('Reading existing sequences from local file...')
+            ep_sequences = pd.read_csv('data/{}/ep_sequences.csv'.format(args.cell_line))
+        else:
+            ep_pairs = getPairs(args.cell_line)
+            if (ep_pairs is None):
+                sys.exit()
+            print('{} EP pairs have been read.'.format(len(ep_pairs)))
+            ep_pairs = ep_pairs[ep_pairs['label'] == 1].reset_index() # Keep only the interacting pairs
+            print('{} EP pairs are labeled as 1.'.format(len(ep_pairs)))
+            ep_sequences = getSequences(ep_pairs)
+            ep_sequences.to_csv('data/{}/ep_sequences.csv'.format(args.cell_line), index=False)
+            print('EP sequences are written!')
 
     ep_sentences = getSentences(ep_sequences, args.k_mer)
     ep_sentences.to_csv('data/{}/ep_sentences_{}mer.csv'.format(
