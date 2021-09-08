@@ -66,3 +66,5 @@ python train.py --cell_line='GM12878' --k_mer=5 --seed=42 --label_rate=0.2 --fra
 **Planetoid:** https://github.com/kimiyoung/planetoid
 
 **GCN:** https://github.com/tkipf/gcn
+
+**bert-enhancer:** https://github.com/khanhlee/bert-enhancer

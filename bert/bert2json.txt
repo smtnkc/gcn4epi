@@ -1,0 +1,10 @@
+python ./extract_features.py \
+    --input_file=./input_sample.txt \
+    --output_file=./output_sample.jsonl \
+    --vocab_file=./vocab.txt \
+    --bert_config_file=./bert_config.json \
+    --init_checkpoint=./bert_model.ckpt.index \
+    --do_lower_case=False \
+    --layers=-1,-2,-3,-4 \
+    --max_seq_length=512 \
+    --batch_size=64
