@@ -16,7 +16,7 @@ def extract_seq(file_path, dir_path='seq', seq_length=200):
     for i in range(2, len(data), 2):
         fid = data[i-1][1:].split(':')
         nseq = nseq + 1
-        fasta = data[i].replace('\n', '')
+        fasta = data[i].replace('\n', '').replace(' ', '')
         seq = ' '.join(fasta)
         ffas = open(f"{dir_path}/{fid[0] + '_' + fid[1]}.seq", "w")
         ffas.write(seq)
