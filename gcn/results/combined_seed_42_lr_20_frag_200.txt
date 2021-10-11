@@ -1,0 +1,16 @@
+Cell line                  = combined
+Fragment length            = 200
+Random seed                = 42
+Label rate                 = 0.20
+K-mer length               = 5
+Total number of nodes      = 19806
+Labeled train nodes (x)    = 3961
+Validation nodes (vx)      = 3961
+Test nodes (tx)            = 3962
+Unlabeled train nodes (ux) = 7922
+Train epochs               = 200
+Train accuracy             = 0.84802
+Validation accuracy        = 0.85004
+Test accuracy              = 0.85210
+Test cost                  = 0.48032
+Test duration              = 0.23934

@@ -1,0 +1,16 @@
+Cell line                  = NHEK
+Fragment length            = 200
+Random seed                = 42
+Label rate                 = 0.20
+K-mer length               = 5
+Total number of nodes      = 64
+Labeled train nodes (x)    = 12
+Validation nodes (vx)      = 13
+Test nodes (tx)            = 13
+Unlabeled train nodes (ux) = 26
+Train epochs               = 12
+Train accuracy             = 0.66667
+Validation accuracy        = 0.46154
+Test accuracy              = 0.38462
+Test cost                  = 0.73891
+Test duration              = 0.00104

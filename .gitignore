@@ -132,3 +132,4 @@ dmypy.json
 .ipynb_checkpoints/
 *.fna
 *.seq
+*mer.csv

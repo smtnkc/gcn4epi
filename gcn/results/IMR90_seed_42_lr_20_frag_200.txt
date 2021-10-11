@@ -1,0 +1,16 @@
+Cell line                  = IMR90
+Fragment length            = 200
+Random seed                = 42
+Label rate                 = 0.20
+K-mer length               = 5
+Total number of nodes      = 436
+Labeled train nodes (x)    = 87
+Validation nodes (vx)      = 87
+Test nodes (tx)            = 88
+Unlabeled train nodes (ux) = 174
+Train epochs               = 140
+Train accuracy             = 0.96552
+Validation accuracy        = 0.94253
+Test accuracy              = 0.82955
+Test cost                  = 0.54717
+Test duration              = 0.00558
