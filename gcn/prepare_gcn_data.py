@@ -14,7 +14,7 @@ from collections import Counter
 from progress.bar import Bar
 
 
-def getSentences(ep_sequences, k_mer):
+def getSentences(cell_line, ep_sequences, k_mer):
 
     def DNA2Sentence(dna, K, clean=False):
         if clean:
@@ -45,7 +45,7 @@ def getSentences(ep_sequences, k_mer):
                                  'enhancer_sentence': enhancer_sentences,
                                  'promoter_sentence': promoter_sentences})
 
-    ep_sentences.to_csv('data/{}/ep_sentences_{}mer.csv'.format(args.cell_line, args.k_mer), index=False)
+    ep_sentences.to_csv('data/{}/ep_sentences_{}mer.csv'.format(cell_line, k_mer), index=False)
     print('EP sentences are written!')
     return ep_sentences
 
@@ -58,11 +58,13 @@ def getNodeById(df_ep, node_id):
         elif pro[0] == node_id:
             return pro
 
-def getTuples(cell_line, k_mer):
+def getTuples(cell_line, cross_cell_line, k_mer):
     """
     Returns a new DF where each element is a tuple of 3 elements: (id, name, sequence)
     """
     ep_sentences = pd.read_csv('data/{}/ep_sentences_{}mer.csv'.format(cell_line, k_mer))
+    if cross_cell_line != None:
+        cross_ep_sentences = pd.read_csv('data/{}/ep_sentences_{}mer.csv'.format(cross_cell_line, k_mer))
 
     e_list = []
     p_list = []
@@ -70,12 +72,11 @@ def getTuples(cell_line, k_mer):
     for i in range(len(ep_sentences)):
         e_list.append((ep_sentences['enhancer_name'][i],
                        ep_sentences['enhancer_sentence'][i]))
-
         p_list.append((ep_sentences['promoter_name'][i],
                        ep_sentences['promoter_sentence'][i]))
 
     ep_list = sorted(list(set(list(ep_sentences['enhancer_name']) + \
-                              list(ep_sentences['promoter_name']))))
+                            list(ep_sentences['promoter_name']))))
 
     # CREATE ID_DICT
     id_dict = {}
@@ -84,10 +85,22 @@ def getTuples(cell_line, k_mer):
         id_dict[ep] = chr_id
         chr_id += 1
 
-    # DUMP ID_DICT
-    nodes_file = open('data/{}/nodes'.format(cell_line), "wb")
-    pkl.dump(id_dict, nodes_file)
-    nodes_file.close()
+    cross_begin_id = chr_id
+
+    if cross_cell_line != None:
+        for i in range(len(cross_ep_sentences)):
+            e_list.append((cross_ep_sentences['enhancer_name'][i],
+                           cross_ep_sentences['enhancer_sentence'][i]))
+            p_list.append((cross_ep_sentences['promoter_name'][i],
+                           cross_ep_sentences['promoter_sentence'][i]))
+
+        cross_ep_list = sorted(list(set(list(cross_ep_sentences['enhancer_name']) + \
+                                        list(cross_ep_sentences['promoter_name']))))
+
+        # ADD CROSS CELL-LINE ENHANCERS AND PROMOTERS INTO ID_DICT
+        for ep in cross_ep_list:
+            id_dict[ep] = chr_id
+            chr_id += 1
 
     for i in range(len(e_list)):
         e_list[i] = (id_dict[e_list[i][0]], ) + e_list[i]
@@ -96,7 +109,8 @@ def getTuples(cell_line, k_mer):
         p_list[i] = (id_dict[p_list[i][0]], ) + p_list[i]
 
     df_ep = pd.DataFrame({'enhancer': e_list, 'promoter': p_list})
-    return df_ep, id_dict
+
+    return df_ep, id_dict, cross_begin_id
 
 def getAdjMatrix(df_ep, node_count):
     adj = sp.csr_matrix((node_count, node_count), dtype=np.int32)
@@ -131,34 +145,6 @@ def getLabels(df_ep, node_count):
         labels[pid] = [0,1] # promoter class
 
     return labels
-
-def getIdPortions(id_dict, args):
-
-    """
-        Returns ID portions for train, test, validation split.
-
-        Label rate is the number of labeled nodes (x) that are used
-        for training divided by the total number of nodes in dataset.
-
-        Example: Label rate = 0.1
-        10% labeled training (x)
-        60% unlabaled training (ux)
-        10% validation (vx)
-        20% test (tx)
-
-        allx = x + ux + vx
-    """
-
-    idx = list(id_dict.values())
-    idx_allx, idx_tx = train_test_split(idx, test_size=0.2, random_state=args.seed)
-    idx_x_vx, idx_ux = train_test_split(idx_allx, test_size=1-(args.label_rate*2/0.8),
-                                        random_state=args.seed)
-    idx_x, idx_vx = train_test_split(idx_x_vx, test_size=0.5, random_state=args.seed)
-
-    print(' {} labeled training \n {} validation \n {} test \n{} unlabeled training'
-        .format(len(idx_x), len(idx_vx), len(idx_tx), len(idx_ux)))
-
-    return idx_x, idx_ux, idx_vx, idx_tx
 
 def getSequences(cell_line):
 
@@ -400,14 +386,83 @@ def getFragments(cell_line, frag_len, balanced, from_scratch):
         ep_frags.columns = ['enhancer_name', 'enhancer_seq', 'promoter_name', 'promoter_seq']
     return ep_frags
 
+def trainTestSplit(cell_line, cross_cell_line, id_dict, cross_begin_id, label_rate, seed):
+
+    def getIdPortions(cell_line, cross_cell_line, id_dict, cross_begin_id, seed):
+
+        """
+            Returns ID portions for train, test, validation split.
+
+            Label rate is the number of labeled nodes (x) that are used
+            for training divided by the total number of nodes in dataset.
+
+            Example: Label rate = 0.1
+            10% labeled training (x)
+            60% unlabaled training (ux)
+            10% validation (vx)
+            20% test (tx) !!! 20% of the same or cross cell-line !!!
+
+            allx = x + ux + vx
+        """
+
+        idx = list(id_dict.values())[0:cross_begin_id] # do not include cross cell-line elements
+        idx_allx, idx_tx = train_test_split(idx, test_size=0.2, random_state=seed)
+        idx_x_vx, idx_ux = train_test_split(idx_allx, test_size=1-(label_rate*2/0.8), random_state=seed)
+        idx_x, idx_vx = train_test_split(idx_x_vx, test_size=0.5, random_state=seed)
+
+        if cross_begin_id == len(id_dict):
+            # No cross cell-line specified. Use same cell-line for testings.
+            print('SAME CELL-LINE TESTING:\n {} labeled training \n {} validation \n {} test ({}) \n{} unlabeled training'
+                .format(len(idx_x), len(idx_vx), len(idx_tx), cell_line, len(idx_ux)))
+        else:
+            # Use cross cell-line for testing. Overwrite idx_tx.
+            cross_idx = list(id_dict.values())[cross_begin_id:]
+            _, idx_tx = train_test_split(cross_idx, test_size=0.2, random_state=seed)
+            print('CROSS CELL-LINE TESTING:\n {} labeled training \n {} validation \n {} test ({}) \n{} unlabeled training'
+                .format(len(idx_x), len(idx_vx), len(idx_tx), cross_cell_line, len(idx_ux)))
+
+        return idx_x, idx_ux, idx_vx, idx_tx
+
+
+    # TRAIN / TEST / VALIDATION SPLIT
+    idx_x, idx_ux, idx_vx, idx_tx = getIdPortions(cell_line, cross_cell_line, id_dict, cross_begin_id, seed)
+    print('Writing index files for train/test/validation split...')
+
+    if args.cross_cell_line != None:
+        dump_dir = 'data/{}/'.format(cell_line + '_' + cross_cell_line)
+    else:
+        dump_dir = 'data/{}/'.format(cell_line)
+
+    if not os.path.exists(dump_dir):
+        os.makedirs(dump_dir)
+
+    lr = '{:.2f}'.format(label_rate).split('.')[1]
+
+    idx_x_file = open('{}/x_{}.index'.format(dump_dir, lr), "wb")
+    pkl.dump(idx_x, idx_x_file)
+    idx_x_file.close()
+
+    idx_ux_file = open('{}/ux_{}.index'.format(dump_dir, lr), "wb")
+    pkl.dump(idx_ux, idx_ux_file)
+    idx_ux_file.close()
+
+    idx_vx_file = open('{}/vx_{}.index'.format(dump_dir, lr), "wb")
+    pkl.dump(idx_vx, idx_vx_file)
+    idx_vx_file.close()
+
+    idx_tx_file = open('{}/tx_{}.index'.format(dump_dir, lr), "wb")
+    pkl.dump(idx_tx, idx_tx_file)
+    idx_tx_file.close()
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='gcn4epi')
     parser.add_argument('--cell_line', default='GM12878', type=str)
+    parser.add_argument('--cross_cell_line', default=None, type=str) # set to run cross cell-line testing
     parser.add_argument('--k_mer', default=5, type=int)
     parser.add_argument('--seed', default=42, type=int)
     parser.add_argument('--label_rate', default=0.2, type=float) # [0.2, 0.1, 0.05]
-    parser.add_argument('--frag_len', default=0, type=int) # set 200 to split into 200bp fragments
+    parser.add_argument('--frag_len', default=200, type=int) # set 0 to disable fragmentation and use full sequences
     parser.add_argument('--balanced', action='store_true') # set to balance enhancers and promoters
     parser.add_argument('--from_scratch', action='store_true') # set to regenerate fragments
     args = parser.parse_args()
@@ -416,50 +471,50 @@ if __name__ == "__main__":
     if args.frag_len > 0:
         # Use fix-sized fragments (not full sequences)
         ep_sequences = getFragments(args.cell_line, args.frag_len, args.balanced, args.from_scratch)
+        if args.cross_cell_line != None:
+            cross_ep_sequences = getFragments(args.cross_cell_line, args.frag_len, args.balanced, args.from_scratch)
     else:
         # Use full sequences (not fragments)
-        ep_sequences = getSequences(args.cell_line)
+        train_ep_sequences = getSequences(args.cell_line)
+        if args.cross_cell_line != None:
+            cross_ep_sequences = getSequences(args.cross_cell_line)
 
-    ep_sentences = getSentences(ep_sequences, args.k_mer)  # also writes EP sentences to files
-    df_ep, id_dict = getTuples(args.cell_line, args.k_mer)  # requires successful run of getSentences()
+    ep_sentences = getSentences(args.cell_line, ep_sequences, args.k_mer)  # also writes EP sentences to files
+    if args.cross_cell_line != None:
+        cross_ep_sentences = getSentences(args.cross_cell_line, cross_ep_sequences, args.k_mer)  # also writes EP sentences to files
+
+    df_ep, id_dict, cross_begin_id = getTuples(args.cell_line, args.cross_cell_line, args.k_mer)  # requires successful run of getSentences()
+
+    if args.cross_cell_line != None:
+        dump_dir = 'data/{}/'.format(args.cell_line + '_' + args.cross_cell_line)
+    else:
+        dump_dir = 'data/{}/'.format(args.cell_line)
+
+    if not os.path.exists(dump_dir):
+        os.makedirs(dump_dir)
+
+    nodes_file = open('{}/nodes'.format(dump_dir), "wb")
+    pkl.dump(id_dict, nodes_file)
+    nodes_file.close()
 
     adj = getAdjMatrix(df_ep, node_count=len(id_dict))
+
     print('Writing adjacency matrix...')
     graph = {i: np.nonzero(row)[1].tolist() for i,row in enumerate(adj)}
-    graph_file = open('data/{}/graph'.format(args.cell_line), "wb")
+    graph_file = open('{}/graph'.format(dump_dir), "wb")
     pkl.dump(graph, graph_file)
     graph_file.close()
 
     features = getFeatureVectors(df_ep)
     print('Writing feature vectors...')
-    features_file = open('data/{}/features_{}mer'.format(args.cell_line, args.k_mer), "wb")
+    features_file = open('{}/features_{}mer'.format(dump_dir, args.k_mer), "wb")
     pkl.dump(features, features_file)
     features_file.close()
 
     labels = getLabels(df_ep, len(id_dict))
     print('Writing binary class labels...')
-    labels_file = open('data/{}/labels'.format(args.cell_line), "wb")
+    labels_file = open('{}/labels'.format(dump_dir), "wb")
     pkl.dump(labels, labels_file)
     labels_file.close()
 
-    # TRAIN / TEST / VALIDATION SPLIT
-    idx_x, idx_ux, idx_vx, idx_tx = getIdPortions(id_dict, args)
-    print('Writing index files for train/test/validation split...')
-
-    lr = txt = '{:.2f}'.format(args.label_rate).split('.')[1]
-
-    idx_x_file = open('data/{}/x_{}.index'.format(args.cell_line, lr), "wb")
-    pkl.dump(idx_x, idx_x_file)
-    idx_x_file.close()
-
-    idx_ux_file = open('data/{}/ux_{}.index'.format(args.cell_line, lr), "wb")
-    pkl.dump(idx_ux, idx_ux_file)
-    idx_ux_file.close()
-
-    idx_vx_file = open('data/{}/vx_{}.index'.format(args.cell_line, lr), "wb")
-    pkl.dump(idx_vx, idx_vx_file)
-    idx_vx_file.close()
-
-    idx_tx_file = open('data/{}/tx_{}.index'.format(args.cell_line, lr), "wb")
-    pkl.dump(idx_tx, idx_tx_file)
-    idx_tx_file.close()
+    trainTestSplit(args.cell_line, args.cross_cell_line, id_dict, cross_begin_id, args.label_rate, args.seed)

@@ -13,6 +13,7 @@ from models import GCN, MLP
 flags = tf.app.flags
 FLAGS = flags.FLAGS
 flags.DEFINE_string('cell_line', 'GM12878', 'Dataset string.')  # 'GM12878', 'K562'
+flags.DEFINE_string('cross_cell_line', None, 'Dataset string.')  # 'GM12878', 'K562'
 flags.DEFINE_string('model', 'gcn', 'Model string.')  # 'gcn', 'gcn_cheby', 'dense'
 flags.DEFINE_float('learning_rate', 0.01, 'Initial learning rate.')
 flags.DEFINE_integer('epochs', 200, 'Number of epochs to train.')
@@ -24,7 +25,7 @@ flags.DEFINE_integer('max_degree', 3, 'Maximum Chebyshev polynomial degree.')
 flags.DEFINE_integer('seed', 42, 'Random seed.')
 flags.DEFINE_integer('k_mer', 5, 'K-mer length.')
 flags.DEFINE_float('label_rate', 0.2, 'Label rate in [0.2, 0.1, 0.05].')
-flags.DEFINE_integer('frag_len', 0, 'Fragment length (base pairs): 0 (disabled) or 200.')
+flags.DEFINE_integer('frag_len', 200, 'Fragment length (base pairs): 0 (disabled) or 200.')
 
 # Set random seed
 np.random.seed(FLAGS.seed)
@@ -32,7 +33,7 @@ tf.set_random_seed(FLAGS.seed)
 
 # Load data
 adj, features, y_train, y_val, y_test, train_mask, val_mask, test_mask = load_data(
-    FLAGS.cell_line, FLAGS.label_rate, FLAGS.k_mer)
+    FLAGS.cell_line, FLAGS.cross_cell_line, FLAGS.label_rate, FLAGS.k_mer)
 n_nodes = features.shape[0]
 
 # Some preprocessing
@@ -118,11 +119,17 @@ print("Test set results:", "cost=", "{:.5f}".format(test_cost),
 if not os.path.isdir("results"):
     os.makedirs("results")
 
+if FLAGS.cross_cell_line != None:
+    log_path = 'results/{}'.format(FLAGS.cell_line + '_' + FLAGS.cross_cell_line)
+else:
+    log_path = 'results/{}'.format(FLAGS.cell_line)
+
 lr = '{:.2f}'.format(FLAGS.label_rate).split('.')[1]
-log_file = "results/{}_seed_{}_lr_{}_frag_{}.txt".format(FLAGS.cell_line, FLAGS.seed, lr, FLAGS.frag_len)
+log_file = "{}_seed_{}_lr_{}_frag_{}.txt".format(log_path, FLAGS.seed, lr, FLAGS.frag_len)
 open(log_file, 'w').close() # clear file content
 logging.basicConfig(format='%(message)s', filename=log_file,level=logging.DEBUG)
-logging.info("Cell line                  = {}".format(FLAGS.cell_line))
+logging.info("Cell-line                  = {}".format(FLAGS.cell_line))
+logging.info("Cross Cell-line            = {}".format(FLAGS.cross_cell_line))
 logging.info("Fragment length            = {}".format(FLAGS.frag_len))
 logging.info("Random seed                = {}".format(FLAGS.seed))
 logging.info("Label rate                 = {:.2f}".format(FLAGS.label_rate))

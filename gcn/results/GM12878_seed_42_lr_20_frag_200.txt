@@ -1,4 +1,5 @@
-Cell line                  = GM12878
+Cell-line                  = GM12878
+Cross Cell-line            = None
 Fragment length            = 200
 Random seed                = 42
 Label rate                 = 0.20
@@ -13,4 +14,4 @@ Train accuracy             = 0.87451
 Validation accuracy        = 0.87618
 Test accuracy              = 0.89185
 Test cost                  = 0.42541
-Test duration              = 0.07688
+Test duration              = 0.07747

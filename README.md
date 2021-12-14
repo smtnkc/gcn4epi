@@ -35,9 +35,15 @@ Run `prepare_gcn_data.py` and `train.py` modules, respectively.
 **Example:**
 ```bash
 cd gcn
-python prepare_gcn_data.py --cell_line='GM12878' --k_mer=5 --seed=42 --label_rate=0.2 --frag_len=200 --balanced
-python train.py --cell_line='GM12878' --k_mer=5 --seed=42 --label_rate=0.2 --frag_len=200
+python prepare_gcn_data.py --cell_line='GM12878' --cross_cell_line='K562' --balanced
+python train.py --cell_line='GM12878' --cross_cell_line='K562'
 ```
+:warning: By default `--frag_len=200 --k_mer=5 --label_rate=0.2 --seed=42`.
+
+:warning: Unset `--cross_cell_line` for testing on the same cell-line.
+
+:warning: Set `--from_scratch` to regenerate fragments while running `prepare_gcn_data.py`.
+
 
 ## Data Requirements
 

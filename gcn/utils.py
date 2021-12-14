@@ -12,7 +12,7 @@ def sample_mask(idx, l):
     return np.array(mask, dtype=np.bool)
 
 
-def load_data(cell_line, label_rate, k_mer):
+def load_data(cell_line, cross_cell_line, label_rate, k_mer):
     """
     Load input data from data/cell_line directory.
 
@@ -30,16 +30,22 @@ def load_data(cell_line, label_rate, k_mer):
     :param cell_line: Name of the cell line to which the datasets belong
     :return: All data input files loaded (as well the training/test data).
     """
+
+    if cross_cell_line != None:
+        read_dir = 'data/{}/'.format(cell_line + '_' + cross_cell_line)
+    else:
+        read_dir = 'data/{}/'.format(cell_line)
+
     # STEP 1: Load all feature vectors, class labels and graph
-    features_file = open('data/{}/features_{}mer'.format(cell_line, k_mer), "rb")
+    features_file = open('{}/features_{}mer'.format(read_dir, k_mer), "rb")
     features = pkl.load(features_file)
     features_file.close()
 
-    labels_file = open('data/{}/labels'.format(cell_line), "rb")
+    labels_file = open('{}/labels'.format(read_dir), "rb")
     labels = pkl.load(labels_file)
     labels_file.close()
 
-    graph_file = open('data/{}/graph'.format(cell_line), "rb")
+    graph_file = open('{}/graph'.format(read_dir), "rb")
     graph = pkl.load(graph_file)
     graph_file.close()
 
@@ -48,19 +54,19 @@ def load_data(cell_line, label_rate, k_mer):
     # STEP 2: Load IDs of labeled_train/unlabeled_train/validation/test nodes
     lr = txt = '{:.2f}'.format(label_rate).split('.')[1]
 
-    idx_x_file = open('data/{}/x_{}.index'.format(cell_line, lr), "rb")
+    idx_x_file = open('{}/x_{}.index'.format(read_dir, lr), "rb")
     idx_x = pkl.load(idx_x_file)
     idx_x_file.close()
 
-    idx_ux_file = open('data/{}/ux_{}.index'.format(cell_line, lr), "rb")
+    idx_ux_file = open('{}/ux_{}.index'.format(read_dir, lr), "rb")
     idx_ux = pkl.load(idx_ux_file)
     idx_ux_file.close()
 
-    idx_vx_file = open('data/{}/vx_{}.index'.format(cell_line, lr), "rb")
+    idx_vx_file = open('{}/vx_{}.index'.format(read_dir, lr), "rb")
     idx_vx = pkl.load(idx_vx_file)
     idx_vx_file.close()
 
-    idx_tx_file = open('data/{}/tx_{}.index'.format(cell_line, lr), "rb")
+    idx_tx_file = open('{}/tx_{}.index'.format(read_dir, lr), "rb")
     idx_tx = pkl.load(idx_tx_file)
     idx_tx_file.close()
 
@@ -76,7 +82,9 @@ def load_data(cell_line, label_rate, k_mer):
 
     tx = features[idx_tx]
     ty = labels[idx_tx]
-    
+
+    print("x={} ux={} vx={} tx={}".format(x.shape[0], ux.shape[0], vx.shape[0], tx.shape[0]))
+
     # STEP 4: Mask labels
     train_mask = sample_mask(idx_x, labels.shape[0])
     val_mask = sample_mask(idx_vx, labels.shape[0])
