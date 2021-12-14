@@ -38,7 +38,7 @@ def load_data(cell_line, label_rate, k_mer):
     labels_file = open('data/{}/labels'.format(cell_line), "rb")
     labels = pkl.load(labels_file)
     labels_file.close()
-    
+
     graph_file = open('data/{}/graph'.format(cell_line), "rb")
     graph = pkl.load(graph_file)
     graph_file.close()

@@ -35,7 +35,7 @@ Run `prepare_gcn_data.py` and `train.py` modules, respectively.
 **Example:**
 ```bash
 cd gcn
-python prepare_gcn_data.py --cell_line='GM12878' --k_mer=5 --seed=42 --label_rate=0.2 --frag_len=200 --from_scratch=False --balanced=True
+python prepare_gcn_data.py --cell_line='GM12878' --k_mer=5 --seed=42 --label_rate=0.2 --frag_len=200 --balanced
 python train.py --cell_line='GM12878' --k_mer=5 --seed=42 --label_rate=0.2 --frag_len=200
 ```
 
