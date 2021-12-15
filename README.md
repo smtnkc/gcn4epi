@@ -34,7 +34,6 @@ Run `prepare_gcn_data.py` and `train.py` modules, respectively.
 
 **Example:**
 ```bash
-cd gcn
 python prepare_gcn_data.py --cell_line='GM12878' --cross_cell_line='K562' --balanced
 python train.py --cell_line='GM12878' --cross_cell_line='K562'
 ```
@@ -47,7 +46,7 @@ python train.py --cell_line='GM12878' --cross_cell_line='K562'
 
 ## Data Requirements
 
-1. Download Human Genome **GRCh37** from [Human Genome Resources at NCBI](https://www.ncbi.nlm.nih.gov/projects/genome/guide/human/index.shtml) and place it under `gcn/data/` directory. **Example:** `gcn/data/GRCh37_latest_genomic.fna`
+1. Download Human Genome **GRCh37** from [Human Genome Resources at NCBI](https://www.ncbi.nlm.nih.gov/projects/genome/guide/human/index.shtml) and place it under `data/` directory. **Example:** `data/GRCh37_latest_genomic.fna`
 
 2. Run `prepare_gcn_data.py` module to prepare data files required by `train.py` module.
 
@@ -72,5 +71,3 @@ python train.py --cell_line='GM12878' --cross_cell_line='K562'
 **Planetoid:** https://github.com/kimiyoung/planetoid
 
 **GCN:** https://github.com/tkipf/gcn
-
-**bert-enhancer:** https://github.com/khanhlee/bert-enhancer
