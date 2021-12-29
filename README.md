@@ -6,8 +6,8 @@ Graph Convolutional Networks for Prediction of Enhancer-Promoter Interactions
 1. Create and activate a fresh virtual environment:
 
 ```bash
-python -m venv ~/env/gcn_env
-source ~/env/gcn_env/bin/activate
+conda create -n gcn_env python=3.7
+conda activate gcn_env
 pip install --upgrade pip
 ```
 
@@ -25,6 +25,8 @@ cd ..
 
 3. Install all required packages:
 ```bash
+cd gcn4epi
+export PYTHONPATH="/home/darg1/Desktop/samet/pcdhit/"
 pip install -r requirements.txt
 ```
 

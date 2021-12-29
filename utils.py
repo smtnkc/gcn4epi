@@ -31,10 +31,10 @@ def load_data(cell_line, cross_cell_line, label_rate, k_mer):
     :return: All data input files loaded (as well the training/test data).
     """
 
-    if cross_cell_line != None:
-        read_dir = 'data/{}/'.format(cell_line + '_' + cross_cell_line)
-    else:
+    if cross_cell_line == cell_line or cross_cell_line == None:
         read_dir = 'data/{}/'.format(cell_line)
+    else:
+        read_dir = 'data/{}_{}/'.format(cell_line, cross_cell_line)
 
     # STEP 1: Load all feature vectors, class labels and graph
     features_file = open('{}/features_{}mer'.format(read_dir, k_mer), "rb")
