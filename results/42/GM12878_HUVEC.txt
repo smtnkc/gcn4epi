@@ -14,4 +14,4 @@ Train accuracy             = 0.87451
 Validation accuracy        = 0.87774
 Test accuracy              = 0.89354
 Test cost                  = 0.43301
-Test duration              = 0.15987
+Test duration              = 0.16525

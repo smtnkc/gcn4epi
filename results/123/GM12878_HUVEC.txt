@@ -1,0 +1,17 @@
+Cell-line                  = GM12878
+Cross Cell-line            = HUVEC
+Fragment length            = 200
+Random seed                = 123
+Label rate                 = 0.20
+K-mer length               = 5
+Total number of nodes      = 13422
+Labeled train nodes (x)    = 1275
+Validation nodes (vx)      = 1276
+Test nodes (tx)            = 1409
+Unlabeled train nodes (ux) = 9462
+Train epochs               = 200
+Train accuracy             = 0.86588
+Validation accuracy        = 0.87382
+Test accuracy              = 0.88360
+Test cost                  = 0.47949
+Test duration              = 0.15562

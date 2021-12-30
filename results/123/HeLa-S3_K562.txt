@@ -1,0 +1,17 @@
+Cell-line                  = HeLa-S3
+Cross Cell-line            = K562
+Fragment length            = 200
+Random seed                = 123
+Label rate                 = 0.20
+K-mer length               = 5
+Total number of nodes      = 6096
+Labeled train nodes (x)    = 708
+Validation nodes (vx)      = 708
+Test nodes (tx)            = 511
+Unlabeled train nodes (ux) = 4169
+Train epochs               = 200
+Train accuracy             = 0.93785
+Validation accuracy        = 0.92797
+Test accuracy              = 0.74168
+Test cost                  = 0.57367
+Test duration              = 0.06558

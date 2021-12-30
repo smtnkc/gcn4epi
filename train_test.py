@@ -1,11 +1,14 @@
 from __future__ import division
 from __future__ import print_function
 
-import time
-import tensorflow as tf
-import logging
 import os
-
+import warnings
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+warnings.filterwarnings('ignore')
+import tensorflow as tf
+tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
+import time
+import logging
 from utils import *
 from models import GCN, MLP
 
@@ -116,16 +119,17 @@ print("Test set results:", "cost=", "{:.5f}".format(test_cost),
 
 # LOGS
 
-if not os.path.isdir("results"):
-    os.makedirs("results")
+log_dir = "results/{}".format(FLAGS.seed)
+if not os.path.isdir(log_dir):
+    os.makedirs(log_dir)
 
-if FLAGS.cross_cell_line != None:
-    log_path = 'results/{}'.format(FLAGS.cell_line + '_' + FLAGS.cross_cell_line)
+if FLAGS.cross_cell_line == None or FLAGS.cross_cell_line == FLAGS.cell_line:
+    log_name = '{}/{}'.format(log_dir, FLAGS.cell_line)
 else:
-    log_path = 'results/{}'.format(FLAGS.cell_line)
+    log_name = '{}/{}'.format(log_dir, FLAGS.cell_line + '_' + FLAGS.cross_cell_line)
 
 lr = '{:.2f}'.format(FLAGS.label_rate).split('.')[1]
-log_file = "{}_seed_{}_lr_{}_frag_{}.txt".format(log_path, FLAGS.seed, lr, FLAGS.frag_len)
+log_file = "{}.txt".format(log_name)
 open(log_file, 'w').close() # clear file content
 logging.basicConfig(format='%(message)s', filename=log_file,level=logging.DEBUG)
 logging.info("Cell-line                  = {}".format(FLAGS.cell_line))

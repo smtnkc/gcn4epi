@@ -1,0 +1,17 @@
+Cell-line                  = HUVEC
+Cross Cell-line            = HeLa-S3
+Fragment length            = 200
+Random seed                = 91
+Label rate                 = 0.20
+K-mer length               = 5
+Total number of nodes      = 10586
+Labeled train nodes (x)    = 1408
+Validation nodes (vx)      = 1409
+Test nodes (tx)            = 709
+Unlabeled train nodes (ux) = 7060
+Train epochs               = 200
+Train accuracy             = 0.89773
+Validation accuracy        = 0.90277
+Test accuracy              = 0.90973
+Test cost                  = 0.39538
+Test duration              = 0.12884

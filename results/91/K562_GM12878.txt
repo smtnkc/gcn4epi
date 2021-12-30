@@ -1,0 +1,17 @@
+Cell-line                  = K562
+Cross Cell-line            = GM12878
+Fragment length            = 200
+Random seed                = 91
+Label rate                 = 0.20
+K-mer length               = 5
+Total number of nodes      = 8932
+Labeled train nodes (x)    = 510
+Validation nodes (vx)      = 511
+Test nodes (tx)            = 1276
+Unlabeled train nodes (ux) = 6635
+Train epochs               = 200
+Train accuracy             = 0.98627
+Validation accuracy        = 0.97847
+Test accuracy              = 0.82994
+Test cost                  = 0.53982
+Test duration              = 0.11564

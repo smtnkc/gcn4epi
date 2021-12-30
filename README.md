@@ -36,14 +36,15 @@ Run `prepare_gcn_data.py` and `train.py` modules, respectively.
 
 **Example:**
 ```bash
-python prepare_gcn_data.py --cell_line='GM12878' --cross_cell_line='K562' --balanced
-python train.py --cell_line='GM12878' --cross_cell_line='K562'
+python prepare_data.py --cell_line='GM12878' --cross_cell_line='K562' --balanced
+python split_data.py --cell_line='GM12878' --cross_cell_line='K562'
+python train_test.py --cell_line='GM12878' --cross_cell_line='K562'
 ```
+:warning: `prepare_data.py` is already executed for each cell-line by the default parameters listed below. You don't have to run it unless you need to regenerate `features`, `nodes`, `labels`, and `graph` files. It takes 1-2 hours in total for all cell-lines. Seed change does not require a rerun. But, changing the other parameters does.
+
 :warning: By default `--frag_len=200 --k_mer=5 --label_rate=0.2 --seed=42`.
 
 :warning: Unset `--cross_cell_line` for testing on the same cell-line.
-
-:warning: Set `--from_scratch` to regenerate fragments while running `prepare_gcn_data.py`.
 
 
 ## Data Requirements
