@@ -1,5 +1,5 @@
 Cell-line                  = combined
-Cross Cell-line            = None
+Cross Cell-line            = combined
 Fragment length            = 200
 Random seed                = 91
 Label rate                 = 0.20
@@ -11,7 +11,8 @@ Test nodes (tx)            = 3962
 Unlabeled train nodes (ux) = 7922
 Train epochs               = 200
 Train accuracy             = 0.84120
+Train duration             = 84.13110
 Validation accuracy        = 0.84373
 Test accuracy              = 0.83342
 Test cost                  = 0.49682
-Test duration              = 0.24906
+Test duration              = 0.22643

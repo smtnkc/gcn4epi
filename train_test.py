@@ -86,6 +86,8 @@ sess.run(tf.global_variables_initializer())
 
 cost_val = []
 
+print('Optimization started!')
+t_train_start = time.time()
 # Train model
 for epoch in range(FLAGS.epochs):
 
@@ -110,7 +112,9 @@ for epoch in range(FLAGS.epochs):
         print("Early stopping...")
         break
 
-print("Optimization Finished!")
+t_train_duration = time.time() - t_train_start
+print("Optimization Finished in {}".format(t_train_duration))
+
 
 # Testing
 test_cost, test_acc, test_duration = evaluate(features, support, y_test, test_mask, placeholders)
@@ -145,6 +149,7 @@ logging.info("Test nodes (tx)            = {}".format(sum(test_mask)))
 logging.info("Unlabeled train nodes (ux) = {}".format(n_nodes - (sum(train_mask) + sum(val_mask) + sum(test_mask))))
 logging.info("Train epochs               = {}".format(epoch+1))
 logging.info("Train accuracy             = {:.5f}".format(outs[2]))
+logging.info("Train duration             = {:.5f}".format(t_train_duration))
 logging.info("Validation accuracy        = {:.5f}".format(acc))
 logging.info("Test accuracy              = {:.5f}".format(test_acc))
 logging.info("Test cost                  = {:.5f}".format(test_cost))
