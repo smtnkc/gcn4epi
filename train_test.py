@@ -2,6 +2,7 @@ from __future__ import division
 from __future__ import print_function
 
 import os
+from re import L
 import warnings
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 warnings.filterwarnings('ignore')
@@ -77,8 +78,8 @@ sess = tf.Session()
 def evaluate(features, support, labels, mask, placeholders):
     t_test = time.time()
     feed_dict_val = construct_feed_dict(features, support, labels, mask, placeholders)
-    outs_val = sess.run([model.loss, model.accuracy], feed_dict=feed_dict_val)
-    return outs_val[0], outs_val[1], (time.time() - t_test)
+    outs_val = sess.run([model.loss, model.accuracy, model.confusion], feed_dict=feed_dict_val)
+    return outs_val[0], outs_val[1], outs_val[2], (time.time() - t_test)
 
 
 # Init variables
@@ -91,7 +92,7 @@ t_train_start = time.time()
 # Train model
 for epoch in range(FLAGS.epochs):
 
-    t = time.time()
+    t1 = time.time()
     # Construct feed dictionary
     feed_dict = construct_feed_dict(features, support, y_train, train_mask, placeholders)
     feed_dict.update({placeholders['dropout']: FLAGS.dropout})
@@ -100,26 +101,28 @@ for epoch in range(FLAGS.epochs):
     outs = sess.run([model.opt_op, model.loss, model.accuracy], feed_dict=feed_dict)
 
     # Validation
-    cost, acc, duration = evaluate(features, support, y_val, val_mask, placeholders)
+    cost, acc, confusion, duration = evaluate(features, support, y_val, val_mask, placeholders)
+
     cost_val.append(cost)
 
     # Print results
-    print("Epoch:", '%04d' % (epoch + 1), "train_loss=", "{:.5f}".format(outs[1]),
-          "train_acc=", "{:.5f}".format(outs[2]), "val_loss=", "{:.5f}".format(cost),
-          "val_acc=", "{:.5f}".format(acc), "time=", "{:.5f}".format(time.time() - t))
+    t2 = time.time()
+    print(("Epoch: {:04d}   train_loss = {:.5f}   train_f1 = {:.5f}   val_loss = {:.5f}   " +
+           "val_f1 = {:.5f}   time = {:.5f}   conf = {}").format(epoch + 1, outs[1], outs[2], cost, acc, t2-t1, confusion))
 
     if epoch > FLAGS.early_stopping and cost_val[-1] > np.mean(cost_val[-(FLAGS.early_stopping+1):-1]):
         print("Early stopping...")
         break
 
 t_train_duration = time.time() - t_train_start
-print("Optimization Finished in {}".format(t_train_duration))
+print("Optimization Finished in {:.5f}".format(t_train_duration))
 
 
 # Testing
-test_cost, test_acc, test_duration = evaluate(features, support, y_test, test_mask, placeholders)
-print("Test set results:", "cost=", "{:.5f}".format(test_cost),
-      "accuracy=", "{:.5f}".format(test_acc), "time=", "{:.5f}".format(test_duration))
+test_cost, test_acc, test_confusion, test_duration = evaluate(features, support, y_test, test_mask, placeholders)
+print("test_loss = {:.5f}   test_F1 = {:.5f}   test_time = {:.5f}".format(test_cost, test_acc, test_duration))
+
+print(test_confusion)
 
 # LOGS
 
@@ -148,9 +151,10 @@ logging.info("Validation nodes (vx)      = {}".format(sum(val_mask)))
 logging.info("Test nodes (tx)            = {}".format(sum(test_mask)))
 logging.info("Unlabeled train nodes (ux) = {}".format(n_nodes - (sum(train_mask) + sum(val_mask) + sum(test_mask))))
 logging.info("Train epochs               = {}".format(epoch+1))
-logging.info("Train accuracy             = {:.5f}".format(outs[2]))
+logging.info("Train F1                   = {:.5f}".format(outs[2]))
 logging.info("Train duration             = {:.5f}".format(t_train_duration))
-logging.info("Validation accuracy        = {:.5f}".format(acc))
-logging.info("Test accuracy              = {:.5f}".format(test_acc))
+logging.info("Validation F1              = {:.5f}".format(acc))
+logging.info("Test F1                    = {:.5f}".format(test_acc))
 logging.info("Test cost                  = {:.5f}".format(test_cost))
 logging.info("Test duration              = {:.5f}".format(test_duration))
+logging.info("Test confusion matrix      = {}".format(test_confusion))

@@ -29,6 +29,7 @@ class Model(object):
 
         self.loss = 0
         self.accuracy = 0
+        self.confusion = [[0, 0], [0, 0]] # tf.zeros([2, 2], tf.int32)
         self.optimizer = None
         self.opt_op = None
 
@@ -54,6 +55,7 @@ class Model(object):
         # Build metrics
         self._loss()
         self._accuracy()
+        self._confusion()
 
         self.opt_op = self.optimizer.minimize(self.loss)
 
@@ -64,6 +66,9 @@ class Model(object):
         raise NotImplementedError
 
     def _accuracy(self):
+        raise NotImplementedError
+
+    def _confusion(self):
         raise NotImplementedError
 
     def save(self, sess=None):
@@ -153,8 +158,12 @@ class GCN(Model):
                                                   self.placeholders['labels_mask'])
 
     def _accuracy(self):
-        self.accuracy = masked_accuracy(self.outputs, self.placeholders['labels'],
-                                        self.placeholders['labels_mask'])
+        self.accuracy = masked_f1(self.outputs, self.placeholders['labels'],
+                                  self.placeholders['labels_mask'])
+
+    def _confusion(self):
+        self.confusion = masked_confusion(self.outputs, self.placeholders['labels'],
+                                          self.placeholders['labels_mask'])
 
     def _build(self):
 
