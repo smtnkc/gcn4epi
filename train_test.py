@@ -130,7 +130,7 @@ log_dir = "results/{}".format(FLAGS.seed)
 if not os.path.isdir(log_dir):
     os.makedirs(log_dir)
 
-if FLAGS.cross_cell_line == None or FLAGS.cross_cell_line == FLAGS.cell_line:
+if FLAGS.cross_cell_line == None:
     log_name = '{}/{}'.format(log_dir, FLAGS.cell_line)
 else:
     log_name = '{}/{}'.format(log_dir, FLAGS.cell_line + '_' + FLAGS.cross_cell_line)

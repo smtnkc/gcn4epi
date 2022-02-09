@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 import pickle as pkl
 import scipy.sparse as sp
+import warnings
 import argparse
 import pcdhit
 from Bio import SeqIO
@@ -77,7 +78,7 @@ def getTuples(cell_line, cross_cell_line, k_mer):
                        ep_sentences['promoter_sentence'][i]))
 
     ep_list = sorted(list(set(list(ep_sentences['enhancer_name']) + \
-                            list(ep_sentences['promoter_name']))))
+                              list(ep_sentences['promoter_name']))))
 
     # CREATE ID_DICT
     id_dict = {}
@@ -115,15 +116,17 @@ def getTuples(cell_line, cross_cell_line, k_mer):
 
 
 def getAdjMatrix(df_ep, node_count):
-    adj = sp.csr_matrix((node_count, node_count), dtype=np.int32)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=sp.SparseEfficiencyWarning)
+        adj = sp.csr_matrix((node_count, node_count), dtype=np.int32)
 
-    for i in range(len(df_ep)):
-        x = df_ep['enhancer'][i][0]
-        y = df_ep['promoter'][i][0]
-        adj[x,y] = 1
-        adj[y,x] = 1
+        for i in range(len(df_ep)):
+            x = df_ep['enhancer'][i][0]
+            y = df_ep['promoter'][i][0]
+            adj[x,y] = 1
+            adj[y,x] = 1
 
-    return adj
+        return adj
 
 
 def getFeatureVectors(df_ep):

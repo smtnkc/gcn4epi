@@ -2,12 +2,13 @@ import os
 import random
 import pickle as pkl
 import argparse
+import numpy as np
 from sklearn.model_selection import train_test_split
-from prepare_data import getTuples
+from prepare_data import getTuples, getLabels
 
-def trainTestSplit(cell_line, cross_cell_line, id_dict, cross_begin_id, label_rate, seed):
+def trainTestSplit(cell_line, cross_cell_line, id_dict, cross_begin_id, labels, label_rate, seed):
 
-    def getIdPortions(cell_line, cross_cell_line, id_dict, cross_begin_id, seed):
+    def getIdPortions(cell_line, cross_cell_line, id_dict, cross_begin_id, labels, seed):
 
         """
             Returns ID portions for train, test, validation split.
@@ -24,8 +25,10 @@ def trainTestSplit(cell_line, cross_cell_line, id_dict, cross_begin_id, label_ra
             allx = x + ux + vx
         """
 
+        np.random.seed(seed)
         idx = list(id_dict.values())[0:cross_begin_id] # do not include cross cell-line elements
-        idx_allx, idx_tx = train_test_split(idx, test_size=0.2, random_state=seed)
+        scl_labels = labels[0:cross_begin_id] # do not include cross cell-line elements (scl = same cell line)
+        idx_allx, idx_tx = train_test_split(idx, test_size=0.2, random_state=seed, stratify=scl_labels)
         idx_x_vx, idx_ux = train_test_split(idx_allx, test_size=1-(label_rate*2/0.8), random_state=seed)
         idx_x, idx_vx = train_test_split(idx_x_vx, test_size=0.5, random_state=seed)
 
@@ -36,7 +39,8 @@ def trainTestSplit(cell_line, cross_cell_line, id_dict, cross_begin_id, label_ra
         else:
             # Use cross cell-line for testing. Overwrite idx_tx.
             cross_idx = list(id_dict.values())[cross_begin_id:]
-            _, idx_tx = train_test_split(cross_idx, test_size=0.2, random_state=seed)
+            ccl_labels = labels[cross_begin_id:] # csl = cross cell line
+            _, idx_tx, _, _ = train_test_split(cross_idx, ccl_labels, test_size=0.2, random_state=seed, stratify=ccl_labels)
             print('CROSS CELL-LINE TESTING:\n {} labeled training \n {} validation \n {} test ({}) \n{} unlabeled training'
                 .format(len(idx_x), len(idx_vx), len(idx_tx), cross_cell_line, len(idx_ux)))
 
@@ -44,7 +48,7 @@ def trainTestSplit(cell_line, cross_cell_line, id_dict, cross_begin_id, label_ra
 
 
     # TRAIN / TEST / VALIDATION SPLIT
-    idx_x, idx_ux, idx_vx, idx_tx = getIdPortions(cell_line, cross_cell_line, id_dict, cross_begin_id, seed)
+    idx_x, idx_ux, idx_vx, idx_tx = getIdPortions(cell_line, cross_cell_line, id_dict, cross_begin_id, labels, seed)
     print('Writing index files for train/test/validation split...')
 
     if (args.cross_cell_line != None) and (args.cross_cell_line != args.cell_line):
@@ -84,6 +88,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     random.seed(args.seed)
 
-    _, id_dict, cross_begin_id = getTuples(args.cell_line, args.cross_cell_line, args.k_mer)  # requires successful run of prepare_gcn_data.py
+    df_ep, id_dict, cross_begin_id = getTuples(args.cell_line, args.cross_cell_line, args.k_mer)  # requires successful run of prepare_gcn_data.py
+    labels = getLabels(df_ep, len(id_dict))
 
-    trainTestSplit(args.cell_line, args.cross_cell_line, id_dict, cross_begin_id, args.label_rate, args.seed)
+    trainTestSplit(args.cell_line, args.cross_cell_line, id_dict, cross_begin_id, labels, args.label_rate, args.seed)
