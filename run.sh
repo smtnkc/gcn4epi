@@ -1,11 +1,14 @@
 #!/bin/bash
 
-SEED=42
+SEED=$1
+PREPARE=$2
 
 for CELL_LINE in 'GM12878' 'HUVEC' 'HeLa-S3' 'K562'; do
     for CROSS_CELL_LINE in 'GM12878' 'HUVEC' 'HeLa-S3' 'K562'; do
-        printf "\n\n\nPREPARING DATA FOR '$CELL_LINE' AND '$CROSS_CELL_LINE' \n\n\n"
-        python prepare_data.py --cell_line="$CELL_LINE" --cross_cell_line="$CROSS_CELL_LINE" --balanced
+        if [ "$PREPARE" = 1 ] ; then
+            printf "\n\n\nPREPARING DATA FOR '$CELL_LINE' AND '$CROSS_CELL_LINE' \n\n\n"
+            python prepare_data.py --cell_line="$CELL_LINE" --cross_cell_line="$CROSS_CELL_LINE" --balanced
+        fi
 
         printf "\n\n\nSPLITTING DATA FOR '$CELL_LINE' AND '$CROSS_CELL_LINE' \n\n\n"
         python split_data.py --cell_line="$CELL_LINE" --cross_cell_line="$CROSS_CELL_LINE" --seed=$SEED
@@ -15,9 +18,10 @@ for CELL_LINE in 'GM12878' 'HUVEC' 'HeLa-S3' 'K562'; do
     done
 done
 
-
-printf "\n\n\nPREPARING DATA FOR combined \n\n\n"
-python prepare_data.py --cell_line='combined' --balanced
+if [ "$PREPARE" = 1 ] ; then
+    printf "\n\n\nPREPARING DATA FOR combined \n\n\n"
+    python prepare_data.py --cell_line='combined' --balanced
+fi
 
 printf "\n\n\nSPLITTING DATA FOR combined \n\n\n"
 python split_data.py --cell_line='combined' --seed=$SEED

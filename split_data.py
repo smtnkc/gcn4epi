@@ -34,14 +34,14 @@ def trainTestSplit(cell_line, cross_cell_line, id_dict, cross_begin_id, labels, 
 
         if cross_begin_id == len(id_dict):
             # No cross cell-line specified. Use same cell-line for testings.
-            print('SAME CELL-LINE TESTING:\n {} labeled training \n {} validation \n {} test ({}) \n{} unlabeled training'
+            print('SAME CELL-LINE TESTING:\n{} labeled training \n{} validation \n{} test ({}) \n{} unlabeled training'
                 .format(len(idx_x), len(idx_vx), len(idx_tx), cell_line, len(idx_ux)))
         else:
             # Use cross cell-line for testing. Overwrite idx_tx.
             cross_idx = list(id_dict.values())[cross_begin_id:]
             ccl_labels = labels[cross_begin_id:] # csl = cross cell line
             _, idx_tx, _, _ = train_test_split(cross_idx, ccl_labels, test_size=0.2, random_state=seed, stratify=ccl_labels)
-            print('CROSS CELL-LINE TESTING:\n {} labeled training \n {} validation \n {} test ({}) \n{} unlabeled training'
+            print('CROSS CELL-LINE TESTING:\n{} labeled training \n{} validation \n{} test ({}) \n{} unlabeled training'
                 .format(len(idx_x), len(idx_vx), len(idx_tx), cross_cell_line, len(idx_ux)))
 
         return idx_x, idx_ux, idx_vx, idx_tx

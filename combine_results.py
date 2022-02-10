@@ -17,14 +17,17 @@ for file in os.listdir('results/' + seeds[0]):
 
 files = sorted(files)
 
-aucs = [[0.0 for i in range(len(files))] for j in range(len(seeds))]
+f1_scores = [[0.0 for i in range(len(files))] for j in range(len(seeds))]
 
 for i in range(len(seeds)):
     train_cell_lines = []
     test_cell_lines = []
     for j in range(len(files)):
-        f = open('results/' + seeds[i] + '/' + files[j], "r")
-        auc = float(f.read().split('\n')[-4].split('= ')[1])
+        f_path = 'results/' + seeds[i] + '/' + files[j]
+        f = open(f_path, "r")
+        f1 = f.read().split('Test F1')[1].split('\n')[0].split('= ')[1]
+        print(f_path, '=', f1)
+        f1 = float(f1)
         f.close()
 
         cell_lines = files[j].split('.')[0].split('_')
@@ -33,7 +36,7 @@ for i in range(len(seeds)):
             test_cell_lines.append(cell_lines[0])
         else:
             test_cell_lines.append(cell_lines[1])
-        aucs[i][j] = float(auc)
+        f1_scores[i][j] = float(f1)
 
 data = {
     'train_cell_line': train_cell_lines,
@@ -41,12 +44,9 @@ data = {
 }
 
 for i in range(len(seeds)):
-    auc_key = 'auc_' + seeds[i]
-    data[auc_key] = aucs[i]
-    print(len(data[auc_key]))
-
-print(len(data['train_cell_line']))
-print(len(data['test_cell_line']))
+    f1_key = 'f1_' + seeds[i]
+    data[f1_key] = f1_scores[i]
+    print('Seed {} f1 count {}'.format(seeds[i], len(data[f1_key])))
 
 
 df = pd.DataFrame(data)
