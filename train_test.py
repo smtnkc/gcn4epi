@@ -126,7 +126,7 @@ print(test_confusion)
 
 # LOGS
 
-log_dir = "results/{}".format(FLAGS.seed)
+log_dir = "results/{}_{}".format(FLAGS.seed, FLAGS.k_mer)
 if not os.path.isdir(log_dir):
     os.makedirs(log_dir)
 
