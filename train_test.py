@@ -12,6 +12,9 @@ import time
 import logging
 from utils import *
 from models import GCN, MLP
+from sklearn.metrics import roc_curve, auc
+import matplotlib.pyplot as plt
+from numpy import trapz
 
 # Settings
 flags = tf.app.flags
@@ -78,8 +81,8 @@ sess = tf.Session()
 def evaluate(features, support, labels, mask, placeholders):
     t_test = time.time()
     feed_dict_val = construct_feed_dict(features, support, labels, mask, placeholders)
-    outs_val = sess.run([model.loss, model.accuracy, model.confusion], feed_dict=feed_dict_val)
-    return outs_val[0], outs_val[1], outs_val[2], (time.time() - t_test)
+    outs_val = sess.run([model.loss, model.accuracy, model.confusion, model.predict()], feed_dict=feed_dict_val)
+    return outs_val[0], outs_val[1], outs_val[2], outs_val[3], (time.time() - t_test)
 
 
 # Init variables
@@ -89,6 +92,7 @@ cost_val = []
 
 print('Optimization started!')
 t_train_start = time.time()
+
 # Train model
 for epoch in range(FLAGS.epochs):
 
@@ -98,10 +102,12 @@ for epoch in range(FLAGS.epochs):
     feed_dict.update({placeholders['dropout']: FLAGS.dropout})
 
     # Training step
-    outs = sess.run([model.opt_op, model.loss, model.accuracy], feed_dict=feed_dict)
+    outs = sess.run([model.opt_op, model.loss, model.accuracy, model.predict()], feed_dict=feed_dict)
 
     # Validation
-    cost, acc, confusion, duration = evaluate(features, support, y_val, val_mask, placeholders)
+    cost, acc, confusion, val_preds, duration = evaluate(features, support, y_val, val_mask, placeholders)
+    y_val_trues = np.argmax(y_val[val_mask], axis=-1)
+    y_val_preds = np.argmax(val_preds[val_mask], axis=-1)
 
     cost_val.append(cost)
 
@@ -119,9 +125,10 @@ print("Optimization Finished in {:.5f}".format(t_train_duration))
 
 
 # Testing
-test_cost, test_acc, test_confusion, test_duration = evaluate(features, support, y_test, test_mask, placeholders)
+test_cost, test_acc, test_confusion, test_preds, test_duration = evaluate(features, support, y_test, test_mask, placeholders)
 print("test_loss = {:.5f}   test_F1 = {:.5f}   test_time = {:.5f}".format(test_cost, test_acc, test_duration))
-
+y_test_trues = np.argmax(y_test[test_mask], axis=-1)
+y_test_preds = np.argmax(test_preds[test_mask], axis=-1)
 print(test_confusion)
 
 # LOGS
@@ -134,6 +141,29 @@ if FLAGS.cross_cell_line == None:
     log_name = '{}/{}'.format(log_dir, FLAGS.cell_line)
 else:
     log_name = '{}/{}'.format(log_dir, FLAGS.cell_line + '_' + FLAGS.cross_cell_line)
+
+
+# Compute ROC curve and ROC area for each class
+
+val_fpr, val_tpr, _ = roc_curve(y_val_trues, y_val_preds)
+val_roc_auc = auc(val_fpr, val_tpr)
+test_fpr, test_tpr, _ = roc_curve(y_test_trues, y_test_preds)
+test_roc_auc = auc(test_fpr, test_tpr)
+
+plt.figure()
+lw = 2
+plt.plot(val_fpr,val_tpr,color="darkorange",lw=lw,label="Train ROC (AUC = %0.2f)" % val_roc_auc)
+plt.plot(test_fpr,test_tpr,color="blue",lw=lw,label="Test ROC (AUC = %0.2f)" % test_roc_auc)
+plt.plot([0, 1], [0, 1], color="navy", lw=lw, linestyle="--")
+plt.xlim([-0.05, 1.05])
+plt.ylim([-0.05, 1.05])
+plt.xlabel("False Positive Rate")
+plt.ylabel("True Positive Rate")
+plt.title("Train: {}   Test: {}".format(FLAGS.cell_line, FLAGS.cross_cell_line))
+plt.legend(loc="lower right")
+plt.savefig("{}.png".format(log_name))
+
+
 
 lr = '{:.2f}'.format(FLAGS.label_rate).split('.')[1]
 log_file = "{}.txt".format(log_name)
