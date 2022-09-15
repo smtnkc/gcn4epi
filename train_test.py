@@ -31,6 +31,7 @@ flags.DEFINE_integer('early_stopping', 10, 'Tolerance for early stopping (# of e
 flags.DEFINE_integer('max_degree', 3, 'Maximum Chebyshev polynomial degree.')
 flags.DEFINE_integer('seed', 42, 'Random seed.')
 flags.DEFINE_integer('k_mer', 5, 'K-mer length.')
+flags.DEFINE_integer('label', 1, 'Label (interacting or non-interacting).')
 flags.DEFINE_float('label_rate', 0.2, 'Label rate in [0.2, 0.1, 0.05].')
 flags.DEFINE_integer('frag_len', 200, 'Fragment length (base pairs): 0 (disabled) or 200.')
 
@@ -133,12 +134,13 @@ print(test_confusion)
 
 # LOGS
 
-log_dir = "results/{}_{}".format(FLAGS.seed, FLAGS.k_mer)
+log_dir = "results/{}_{}_{}_{}".format(FLAGS.label, FLAGS.seed, FLAGS.k_mer, FLAGS.label_rate)
+#log_dir = "results/{}_{}".format(FLAGS.seed, FLAGS.k_mer)
 if not os.path.isdir(log_dir):
     os.makedirs(log_dir)
 
 if FLAGS.cross_cell_line == None:
-    log_name = '{}/{}'.format(log_dir, FLAGS.cell_line)
+    log_name = '{}/{}'.format(log_dir, FLAGS.cell_line + '_' + FLAGS.cell_line)
 else:
     log_name = '{}/{}'.format(log_dir, FLAGS.cell_line + '_' + FLAGS.cross_cell_line)
 
@@ -176,7 +178,7 @@ logging.info("Random seed                = {}".format(FLAGS.seed))
 logging.info("Label rate                 = {:.2f}".format(FLAGS.label_rate))
 logging.info("K-mer length               = {}".format(FLAGS.k_mer))
 logging.info("Total number of nodes      = {}".format(n_nodes))
-logging.info("Labeled train nodes (x)    = {}".format(sum(train_mask)))
+logging.info("Labeled train nodes (lx)   = {}".format(sum(train_mask)))
 logging.info("Validation nodes (vx)      = {}".format(sum(val_mask)))
 logging.info("Test nodes (tx)            = {}".format(sum(test_mask)))
 logging.info("Unlabeled train nodes (ux) = {}".format(n_nodes - (sum(train_mask) + sum(val_mask) + sum(test_mask))))

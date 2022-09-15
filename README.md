@@ -36,9 +36,9 @@ Run `prepare_gcn_data.py` and `train.py` modules, respectively.
 
 **Example:**
 ```bash
-python prepare_data.py --cell_line='GM12878' --cross_cell_line='K562' --balanced
-python split_data.py --cell_line='GM12878' --cross_cell_line='K562'
-python train_test.py --cell_line='GM12878' --cross_cell_line='K562'
+python prepare_data.py --cell_line='GM12878' --cross_cell_line='K562' --k_mer=5 --label_rate=0.2 --label=1 --seed=42 --from_scratch --balanced
+python split_data.py --cell_line='GM12878' --cross_cell_line='K562' --k_mer=5 --label_rate=0.2 --seed=42
+python train_test.py --cell_line='GM12878' --cross_cell_line='K562' --k_mer=5 --label_rate=0.2 --label=1 --seed=42
 ```
 :warning: `prepare_data.py` is already executed for each cell-line by the default parameters listed below. You don't have to run it unless you need to regenerate `features`, `nodes`, `labels`, and `graph` files. It takes 1-2 hours in total for all cell-lines. Seed change does not require a rerun. But, changing the other parameters does.
 
@@ -57,10 +57,10 @@ python train_test.py --cell_line='GM12878' --cross_cell_line='K562'
 
 | **File Name** | **Description** |
 | :--           | :--             |
-| x_20.index   | the indices (IDs) of labeled train instances as list object (for label_rate = 20%) |
-| ux_20.index  | the indices (IDs) of unlabeled train instances as list object (for label_rate = 20%) |
-| vx_20.index  | the indices (IDs) of validation instances as list object (for label_rate = 20%) |
-| tx_20.index  | the indices (IDs) of test instances as list object (for label_rate = 20%) |
+| lx_20.index   | the indices (IDs) of labeled train instances as list object (for label_rate = 20%) |
+| ux_20.index   | the indices (IDs) of unlabeled train instances as list object (for label_rate = 20%) |
+| vx_20.index   | the indices (IDs) of validation instances as list object (for label_rate = 20%) |
+| tx_20.index   | the indices (IDs) of test instances as list object (for label_rate = 20%) |
 | features_5mer | the feature vectors of **all** instances as scipy.sparse.csr.csr_matrix object (for k_mer = 5) |
 | nodes         | a dict in the format **{chromosome_name: ID}** as collections.defaultdict object |
 | labels        | the one-hot labels of **all** instances as numpy.ndarray object |

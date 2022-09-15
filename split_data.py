@@ -16,39 +16,38 @@ def trainTestSplit(cell_line, cross_cell_line, id_dict, cross_begin_id, labels, 
             Label rate is the number of labeled nodes (x) that are used
             for training divided by the total number of nodes in dataset.
 
-            Example: Label rate = 0.1
-            10% labeled training (x)
-            60% unlabaled training (ux)
-            10% validation (vx)
-            20% test (tx) !!! 20% of the same or cross cell-line !!!
-
-            allx = x + ux + vx
+            Example for 0.2 label rate:
+            20% tx (Fixed 20% of the same or cross cell-line)
+            80% lx + ux + vx
+                16% vx (Fixed 20% of the lx + ux + vx data)
+                12.8% lx (20% of the lx + ux data since label rate is 0.2)
+                51.2% ux (80% of the lx + ux data)
         """
 
         np.random.seed(seed)
-        idx = list(id_dict.values())[0:cross_begin_id] # do not include cross cell-line elements
+        idx_lx_ux_vx_tx = list(id_dict.values())[0:cross_begin_id] # do not include cross cell-line elements
         scl_labels = labels[0:cross_begin_id] # do not include cross cell-line elements (scl = same cell line)
-        idx_allx, idx_tx = train_test_split(idx, test_size=0.2, random_state=seed, stratify=scl_labels)
-        idx_x_vx, idx_ux = train_test_split(idx_allx, test_size=1-(label_rate*2/0.8), random_state=seed)
-        idx_x, idx_vx = train_test_split(idx_x_vx, test_size=0.5, random_state=seed)
+        idx_lx_ux_vx, idx_tx = train_test_split(idx_lx_ux_vx_tx, test_size=0.2, random_state=seed, stratify=scl_labels)
+        idx_lx_ux, idx_vx = train_test_split(idx_lx_ux_vx, test_size=0.2, random_state=seed)
+        idx_lx, idx_ux = train_test_split(idx_lx_ux, test_size=1-label_rate, random_state=seed)
 
-        if cross_begin_id == len(id_dict):
+        if cell_line == cross_cell_line or cross_cell_line == None:
             # No cross cell-line specified. Use same cell-line for testings.
             print('SAME CELL-LINE TESTING:\n{} labeled training \n{} validation \n{} test ({}) \n{} unlabeled training'
-                .format(len(idx_x), len(idx_vx), len(idx_tx), cell_line, len(idx_ux)))
+                .format(len(idx_lx), len(idx_vx), len(idx_tx), cell_line, len(idx_ux)))
         else:
-            # Use cross cell-line for testing. Overwrite idx_tx.
-            cross_idx = list(id_dict.values())[cross_begin_id:]
+            # Use cross cell-line for testing. Overwrite tx.
+            cross_idx_lx_ux_vx_tx = list(id_dict.values())[cross_begin_id:]
             ccl_labels = labels[cross_begin_id:] # ccl = cross cell line
-            _, idx_tx = train_test_split(cross_idx, test_size=0.2, random_state=seed, stratify=ccl_labels)
+            _, idx_tx = train_test_split(cross_idx_lx_ux_vx_tx, test_size=0.2, random_state=seed, stratify=ccl_labels)
             print('CROSS CELL-LINE TESTING:\n{} labeled training \n{} validation \n{} test ({}) \n{} unlabeled training'
-                .format(len(idx_x), len(idx_vx), len(idx_tx), cross_cell_line, len(idx_ux)))
+                .format(len(idx_lx), len(idx_vx), len(idx_tx), cross_cell_line, len(idx_ux)))
 
-        return idx_x, idx_ux, idx_vx, idx_tx
+        return idx_lx, idx_ux, idx_vx, idx_tx
 
 
     # TRAIN / TEST / VALIDATION SPLIT
-    idx_x, idx_ux, idx_vx, idx_tx = getIdPortions(cell_line, cross_cell_line, id_dict, cross_begin_id, labels, seed)
+    idx_lx, idx_ux, idx_vx, idx_tx = getIdPortions(cell_line, cross_cell_line, id_dict, cross_begin_id, labels, seed)
     print('Writing index files for train/test/validation split...')
 
     if (args.cross_cell_line != None) and (args.cross_cell_line != args.cell_line):
@@ -61,21 +60,21 @@ def trainTestSplit(cell_line, cross_cell_line, id_dict, cross_begin_id, labels, 
 
     lr = '{:.2f}'.format(label_rate).split('.')[1]
 
-    idx_x_file = open('{}/x_{}.index'.format(dump_dir, lr), "wb")
-    pkl.dump(idx_x, idx_x_file)
-    idx_x_file.close()
+    lx_file = open('{}/lx_{}.index'.format(dump_dir, lr), "wb")
+    pkl.dump(idx_lx, lx_file)
+    lx_file.close()
 
-    idx_ux_file = open('{}/ux_{}.index'.format(dump_dir, lr), "wb")
-    pkl.dump(idx_ux, idx_ux_file)
-    idx_ux_file.close()
+    ux_file = open('{}/ux_{}.index'.format(dump_dir, lr), "wb")
+    pkl.dump(idx_ux, ux_file)
+    ux_file.close()
 
-    idx_vx_file = open('{}/vx_{}.index'.format(dump_dir, lr), "wb")
-    pkl.dump(idx_vx, idx_vx_file)
-    idx_vx_file.close()
+    vx_file = open('{}/vx_{}.index'.format(dump_dir, lr), "wb")
+    pkl.dump(idx_vx, vx_file)
+    vx_file.close()
 
-    idx_tx_file = open('{}/tx_{}.index'.format(dump_dir, lr), "wb")
-    pkl.dump(idx_tx, idx_tx_file)
-    idx_tx_file.close()
+    tx_file = open('{}/tx_{}.index'.format(dump_dir, lr), "wb")
+    pkl.dump(idx_tx, tx_file)
+    tx_file.close()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='gcn4epi')

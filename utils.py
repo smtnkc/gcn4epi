@@ -16,10 +16,10 @@ def load_data(cell_line, cross_cell_line, label_rate, k_mer):
     """
     Load input data from data/cell_line directory.
 
-    | x_20.index   | the indices (IDs) of labeled train instances as list object (for label_rate = 20%) |
-    | ux_20.index  | the indices (IDs) of unlabeled train instances as list object (for label_rate = 20%) |
-    | vx_20.index  | the indices (IDs) of validation instances as list object (for label_rate = 20%) |
-    | tx_20.index  | the indices (IDs) of test instances as list object (for label_rate = 20%) |
+    | lx_20.index   | the indices (IDs) of labeled train instances as list object (for label_rate = 20%) |
+    | ux_20.index   | the indices (IDs) of unlabeled train instances as list object (for label_rate = 20%) |
+    | vx_20.index   | the indices (IDs) of validation instances as list object (for label_rate = 20%) |
+    | tx_20.index   | the indices (IDs) of test instances as list object (for label_rate = 20%) |
     | features_5mer | the feature vectors of all instances as scipy.sparse.csr.csr_matrix object (for k_mer = 5) |
     | nodes         | a dict in the format {chromosome_name: ID} as collections.defaultdict object |
     | labels        | the one-hot labels of all instances as numpy.ndarray object |
@@ -54,9 +54,9 @@ def load_data(cell_line, cross_cell_line, label_rate, k_mer):
     # STEP 2: Load IDs of labeled_train/unlabeled_train/validation/test nodes
     lr = txt = '{:.2f}'.format(label_rate).split('.')[1]
 
-    idx_x_file = open('{}/x_{}.index'.format(read_dir, lr), "rb")
-    idx_x = pkl.load(idx_x_file)
-    idx_x_file.close()
+    idx_lx_file = open('{}/lx_{}.index'.format(read_dir, lr), "rb")
+    idx_lx = pkl.load(idx_lx_file)
+    idx_lx_file.close()
 
     idx_ux_file = open('{}/ux_{}.index'.format(read_dir, lr), "rb")
     idx_ux = pkl.load(idx_ux_file)
@@ -71,8 +71,8 @@ def load_data(cell_line, cross_cell_line, label_rate, k_mer):
     idx_tx_file.close()
 
     # STEP 3: Take subsets from loaded features and class labels using loaded IDs
-    x = features[idx_x]
-    y = labels[idx_x]
+    x = features[idx_lx]
+    y = labels[idx_lx]
 
     ux = features[idx_ux]
     uy = labels[idx_ux]
@@ -83,10 +83,10 @@ def load_data(cell_line, cross_cell_line, label_rate, k_mer):
     tx = features[idx_tx]
     ty = labels[idx_tx]
 
-    print("x={} ux={} vx={} tx={}".format(x.shape[0], ux.shape[0], vx.shape[0], tx.shape[0]))
+    print("lx={} ux={} vx={} tx={}".format(x.shape[0], ux.shape[0], vx.shape[0], tx.shape[0]))
 
     # STEP 4: Mask labels
-    train_mask = sample_mask(idx_x, labels.shape[0])
+    train_mask = sample_mask(idx_lx, labels.shape[0])
     val_mask = sample_mask(idx_vx, labels.shape[0])
     test_mask = sample_mask(idx_tx, labels.shape[0])
 
